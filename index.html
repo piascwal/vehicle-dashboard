@@ -43,7 +43,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 #main-row{
   flex:1 1 0; min-height:0; padding:10px; display:grid; gap:10px;
   grid-template-columns: 1fr 7.5fr 1.2fr;
-  grid-template-rows: 1fr 260px;
+  grid-template-rows: 0.92fr 350px;
   grid-template-areas:
     "manette instr colright"
     "commandes row3 colright";
@@ -56,7 +56,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 }
 #row3-sub{grid-area:row3; display:flex; gap:10px; min-height:0; min-width:0;}
 #col-right{grid-area:colright; display:flex; flex-direction:column; gap:10px; min-height:0; min-width:0;}
-#robots-block{flex:1 1 0; min-height:0;}
+#robots-block{flex:0 0 auto; min-height:0;}
 #tape-alt{grid-area:alt;} #viseur-col{grid-area:viseur;} #tape-spd{grid-area:spd;} #boussole-wrap{grid-area:boussole;}
 
 /* TRES GRAND écran (Tesla 16:9 large, > 1900px) : on garde les proportions du croquis
@@ -167,8 +167,8 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 #boussole-label{position:absolute; left:6px; top:2px; font-size:7px; letter-spacing:1px; color:var(--hud-dim);}
 
 /* sous-rangée : radar / armement / manche */
-#radar-card{flex:0 0 210px;}
-#armement-block{flex:1 1 0; min-width:150px;}
+#radar-card{flex:1 1 0; min-width:0;}
+#armement-block{flex:1.3 1 0; min-width:0;}
 #armement-body{flex:1 1 0; display:flex; flex-direction:column; gap:6px; padding:6px 10px 8px; min-height:0;}
 .arm-row{display:flex; align-items:center; justify-content:space-between;}
 #weapon-toggle{display:flex; border:1px solid var(--hud-dim); border-radius:4px; overflow:hidden; flex:0 0 auto;}
@@ -183,7 +183,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 #fire-btn.disabled{opacity:0.35; box-shadow:none;}
 #ammo-readout{display:flex; justify-content:space-between; font-size:9.5px; flex:0 0 auto; color:var(--hud);}
 
-#manche-block{flex:0 0 190px;}
+#manche-block{flex:1 1 0; min-width:0;}
 #joy-zone{
   position:relative; width:96px; height:96px; margin:auto; border-radius:50%;
   background:radial-gradient(circle at 35% 30%, rgba(80,100,75,0.35), rgba(10,14,9,0.55));
@@ -196,12 +196,12 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 }
 
 /* colonne droite : robots + visuel mission */
-#robots-body{flex:1 1 0; display:flex; flex-direction:column; justify-content:space-evenly; padding:6px 10px 8px; gap:6px; min-height:0;}
+#robots-body{flex:0 0 auto; display:flex; flex-direction:column; padding:6px 10px 8px; gap:7px; min-height:0;}
 #robot-icon{flex:0 0 auto; display:flex; justify-content:center; padding:4px 0 0;}
 #robot-icon svg{width:34px; height:34px; fill:var(--hud); stroke:var(--hud); stroke-width:0.6;}
-.robot-row{display:flex; justify-content:space-between; gap:8px; flex:0 0 auto;}
-.robot-item{display:flex; flex-direction:column; align-items:center; gap:5px; flex:1 1 0; min-width:0;}
-.robot-lbl{font-size:7px; letter-spacing:0.3px; color:var(--hud-dim); text-align:center; line-height:1.25; white-space:normal; overflow-wrap:break-word; width:100%;}
+.robot-row{display:flex; flex-direction:column; gap:6px; flex:0 0 auto;}
+.robot-item{display:flex; flex-direction:row; align-items:center; gap:8px; flex:0 0 auto; min-width:0;}
+.robot-lbl{font-size:8px; letter-spacing:0.5px; color:var(--hud-dim); text-align:left; line-height:1.2; white-space:normal; overflow-wrap:break-word; flex:1 1 auto; min-width:0;}
 .robot-btn{
   width:44px; height:44px; border-radius:8px; cursor:pointer; flex:0 0 auto;
   background:linear-gradient(#2c3a26,#161c12); border:1px solid var(--hud-dim);
@@ -217,7 +217,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 #mission-pct-wrap .lbl{font-size:8px; color:var(--hud-dim); letter-spacing:1px;}
 #mission-pct-wrap .val{font-size:15px; color:var(--hud); font-weight:bold;}
 
-#visual-mission-block{flex:0 0 260px;}
+#visual-mission-block{flex:1 1 0; min-height:0;}
 #visual-mission-canvas-wrap{flex:1 1 0; position:relative; min-height:0;}
 #visual-mission-canvas-wrap canvas{display:block; position:absolute; inset:0; width:100%; height:100%;}
 #visual-mission-caption{font-size:8px; color:var(--hud-dim); text-align:center; padding:3px 4px 5px; flex:0 0 auto;}
@@ -237,7 +237,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
   #main-row{
     gap:6px; padding:6px;
     grid-template-columns: minmax(58px,0.9fr) 4.2fr minmax(104px,1.5fr);
-    grid-template-rows: 1fr clamp(96px, 19vh, 150px);
+    grid-template-rows: 0.92fr clamp(120px, 27vh, 240px);
   }
 
   /* la sous-rangée ne passe plus à la ligne : les trois cartes se partagent la largeur */
@@ -246,7 +246,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
   #armement-block{flex:1.15 1 0; min-width:0;}
   #radar-card{flex:1 1 0; min-width:0;}
   #col-right{gap:6px;}
-  #visual-mission-block{flex:0 0 clamp(60px, 12vh, 140px);}
+  #visual-mission-block{flex:1 1 0; min-height:clamp(54px, 10vh, 150px);}
 
   /* instruments : bandes altitude / vitesse et boussole réduites */
   #instruments-block{
@@ -282,7 +282,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 /* ÉCRAN COMPACT ET PEU HAUT : on serre encore les deux rangées fixes */
 @media (max-height:640px){
   #row1{flex:0 0 clamp(70px, 15vh, 110px);}
-  #main-row{grid-template-rows: 1fr clamp(82px, 17vh, 120px);}
+  #main-row{grid-template-rows: 0.92fr clamp(104px, 23vh, 170px);}
   #robot-icon{display:none;}
   .robot-lbl{font-size:6.5px;}
   #visual-mission-caption{display:none;}
@@ -308,8 +308,9 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
   }
   #col-right{flex-direction:column;}
   #robots-block{flex:0 0 auto;}
+  #robots-body{flex:1 1 auto; justify-content:space-evenly;}
   #robot-icon{display:flex;}
-  #visual-mission-block{flex:0 0 108px;}
+  #visual-mission-block{flex:0 0 auto; min-height:200px;}
   #visual-mission-caption{display:block;}
   #instruments-block{height:320px; grid-template-columns: 66px 1fr 66px; grid-template-rows: 1fr 38px;}
   #boussole-wrap{flex:0 0 38px;}
@@ -323,6 +324,36 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
   .robot-btn{width:44px; height:44px;}
   .robot-btn svg{width:20px; height:20px;}
 }
+
+/* ===================== SECOUSSE D'IMPACT ===================== */
+@keyframes impact-shake{
+  0%{transform:translate(0,0) rotate(0deg);}
+  12%{transform:translate(-6px,4px) rotate(-0.45deg);}
+  26%{transform:translate(5px,-5px) rotate(0.4deg);}
+  40%{transform:translate(-4px,-3px) rotate(-0.28deg);}
+  55%{transform:translate(4px,3px) rotate(0.22deg);}
+  70%{transform:translate(-3px,2px) rotate(-0.14deg);}
+  85%{transform:translate(2px,-1px) rotate(0.07deg);}
+  100%{transform:translate(0,0) rotate(0deg);}
+}
+#cockpit.shake{animation:impact-shake .45s cubic-bezier(.36,.07,.19,.97) both;}
+/* voile rouge bref, superposé au cockpit pendant l'impact */
+#impact-flash{
+  position:absolute; inset:0; pointer-events:none; opacity:0; z-index:50;
+  background:radial-gradient(ellipse at center, rgba(255,59,48,0) 45%, rgba(255,59,48,0.38) 100%);
+}
+#impact-flash.on{animation:impact-flash .45s ease-out both;}
+@keyframes impact-flash{0%{opacity:0.95;} 100%{opacity:0;}}
+@media (prefers-reduced-motion:reduce){
+  #cockpit.shake{animation:none;}
+  #impact-flash.on{animation:none;}
+}
+
+/* curseur de frappe du briefing */
+#briefing-text.typing::after{
+  content:'\258C'; color:var(--hud); margin-left:1px;
+  animation:blink 0.9s steps(1) infinite;
+}
 </style>
 </head>
 <body>
@@ -335,6 +366,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 
 <div id="viewport">
 <div id="cockpit">
+  <div id="impact-flash"></div>
   <div id="topbar">
     <div class="grp"><span class="lbl">MODE</span><span class="val" id="hud-mode">PARC</span></div>
     <div class="grp"><span class="lbl">HEURE</span><span class="val" id="hud-clock">00:00</span></div>
@@ -462,16 +494,16 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
         <div id="robots-body">
           <div class="robot-row">
             <div class="robot-item">
-              <span class="robot-lbl">RAVITAILLEMENT</span>
               <div class="robot-btn" id="btn-fuel"><svg viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 16a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <span class="robot-lbl">RAVITAILLEMENT</span>
             </div>
             <div class="robot-item">
-              <span class="robot-lbl">RÉPARATION</span>
               <div class="robot-btn" id="btn-repair"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.1 2.1-2-2 2.1-2.1z"/></svg></div>
+              <span class="robot-lbl">RÉPARATION</span>
             </div>
             <div class="robot-item">
-              <span class="robot-lbl">MUNITIONS</span>
               <div class="robot-btn" id="btn-ammo"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="9" rx="2"/><rect x="9" y="13" width="6" height="8" opacity="0.7"/></svg></div>
+              <span class="robot-lbl">MUNITIONS</span>
             </div>
           </div>
           <div id="mission-bar-wrap"><div id="mission-bar"></div></div>
@@ -582,6 +614,12 @@ const Audio_ = {
     const o=c.createOscillator(); o.type='square'; o.frequency.value=freq;
     const g=c.createGain(); g.gain.setValueAtTime(0.18,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
     o.connect(g); g.connect(this.master); o.start(t); o.stop(t+dur+0.02);
+  },
+  tick(){
+    const c=this.ctx,t=c.currentTime;
+    const o=c.createOscillator(); o.type='square'; o.frequency.value=1400+Math.random()*400;
+    const g=c.createGain(); g.gain.setValueAtTime(0.012,t); g.gain.exponentialRampToValueAtTime(0.0005,t+0.012);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t+0.03);
   },
   gunshot(){
     const c=this.ctx,t=c.currentTime;
@@ -787,6 +825,7 @@ function destroyEnemy(e){
   const idx=state.enemies.indexOf(e); if(idx>=0) state.enemies.splice(idx,1);
   Audio_.explosion(); state.score++; document.getElementById('score-val').textContent=state.score;
   flashMessage('CIBLE DÉTRUITE');
+  if(state.score%5===0) Chief.event('killStreak', {n:state.score}); else Chief.event('kill');
   if(state.lockTarget===e){ state.lockTarget=null; state.lockProgress=0; }
 }
 function checkGunHit(){
@@ -799,7 +838,11 @@ function applyDamage(){
   const parts=['nose','left','right','engine','tail'];
   const p = parts[Math.floor(Math.random()*parts.length)];
   state.damage[p] = Math.min(100, state.damage[p] + 15 + Math.random()*15);
-  Audio_.hitTone(); flashMessage('TOUCHÉ !');
+  Audio_.hitTone(); flashMessage('TOUCHÉ !'); impactShake();
+  Chief.event(damageLevel()>55 ? 'damageHeavy' : 'damage');
+}
+function damageLevel(){
+  const d=state.damage; return Math.max(d.nose,d.left,d.right,d.engine,d.tail);
 }
 function anyDamage(){ return state.damage.nose>0||state.damage.left>0||state.damage.right>0||state.damage.engine>0||state.damage.tail>0; }
 
@@ -826,19 +869,169 @@ function updateRobotButtons(){
 }
 const missionNames={fuel:'RAVITAILLEMENT', repair:'RÉPARATION', ammo:'MUNITIONS'};
 
-/* ===================== BRIEFING MISSION ===================== */
-const briefings=[
-  "Secteur nord : plusieurs contacts non identifiés signalés. Restez vigilant et gardez le viseur sur l'horizon.",
-  "Ravitaillement prioritaire avant toute interception. N'oubliez pas vos robots de soutien.",
-  "Bon pilote, la météo est calme aujourd'hui. Profitez-en pour vérifier tous vos systèmes.",
-  "Nouvelle cible repérée par le radar. Verrouillez et engagez si nécessaire.",
-  "Rappel : le train doit être rentré avant de prendre de la vitesse en vol.",
-  "Belle mission hier. Le mécanicien a fini les réparations, l'appareil est prêt.",
-];
-let briefingIdx=0;
-function showBriefing(i){ document.getElementById('briefing-text').textContent = briefings[((i%briefings.length)+briefings.length)%briefings.length]; }
-showBriefing(0);
-document.getElementById('briefing-card').addEventListener('click', ()=>{ briefingIdx++; showBriefing(briefingIdx); Audio_.click(650,0.04); });
+/* ===================== MESSAGES DU CHEF =====================
+   Le chef parle en continu : ordres de mission au repos, et réactions
+   immédiates aux évènements (cible abattue, impact, carburant, munitions).
+   Le texte s'écrit caractère par caractère. */
+const chiefLines = {
+  /* au sol / moteur coupé */
+  parc:[
+    "Appareil au parc. Faites le tour des systèmes avant de lancer le moteur, on ne décolle pas à l'aveugle.",
+    "Les mécaniciens ont rendu l'appareil ce matin. Moteur quand vous voulez, pilote.",
+    "Rien à signaler sur le secteur. Reposez-vous pendant que c'est calme, ça ne durera pas.",
+    "Pleins faits, munitions embarquées. J'attends votre départ.",
+  ],
+  /* au roulage / décollage */
+  roulage:[
+    "Vous êtes autorisé au roulage. Train sorti, volets sortis, on ne se précipite pas.",
+    "Piste dégagée. Mettez les gaz franchement, la patrouille précédente a déjà décollé.",
+    "Attention à la vitesse au sol. Le dernier qui a forcé a laissé un train sur le tarmac.",
+  ],
+  /* en vol, rien de particulier */
+  ambient:[
+    "Secteur nord : plusieurs contacts non identifiés signalés. Gardez le viseur sur l'horizon.",
+    "Nouvelle mission : patrouille haute altitude sur le corridor est. Rendez compte de tout contact.",
+    "Le radar de la base a perdu deux échos vers l'ouest. Allez voir ce que c'est.",
+    "Ordre de mission : couverture du convoi au sud. Restez entre deux mille et quatre mille pieds.",
+    "Météo calme sur toute la zone. Profitez-en pour vérifier vos systèmes un par un.",
+    "Rappel : train rentré avant de prendre de la vitesse, on n'est plus au terrain.",
+    "Une escadrille amie rentre par le nord-est. Identifiez avant d'engager, pas d'erreur aujourd'hui.",
+    "Rien sur les écrans pour l'instant. Ne relâchez pas votre attention pour autant.",
+    "Nouvelle mission : reconnaissance armée sur la vallée. Vous engagez seulement si on vous tire dessus.",
+    "Le vent tourne au nord. Ajustez votre cap, vous dérivez.",
+  ],
+  /* cible abattue */
+  kill:[
+    "Cible détruite, joli travail. Le secteur vous remercie.",
+    "Touché ! C'est propre, continuez comme ça.",
+    "Un de moins. Je note ça dans votre carnet, pilote.",
+    "Excellent tir. La base confirme la destruction.",
+    "Bien joué. Ne vous laissez pas griser, il en reste.",
+  ],
+  killStreak:[
+    "{n} appareils à votre actif. Vous faites honneur à l'escadrille.",
+    "{n} victoires. Je commence à manquer de place sur le tableau.",
+    "{n} cibles détruites. Le commandement va vouloir votre photo.",
+  ],
+  /* impact reçu */
+  damage:[
+    "Vous êtes touché ! Vérifiez l'état de l'appareil immédiatement.",
+    "Impact confirmé. Dégagez de la zone et faites le point.",
+    "Ça a cogné ! Envoyez un robot de réparation avant que ça empire.",
+    "Vous encaissez trop. Sortez du secteur, c'est un ordre.",
+  ],
+  damageHeavy:[
+    "L'appareil est sévèrement touché. Réparation immédiate, je ne veux pas perdre un pilote aujourd'hui.",
+    "Structure critique ! Robot de réparation, tout de suite.",
+  ],
+  /* carburant bas */
+  fuel:[
+    "Carburant bas. Lancez le ravitaillement avant de vous retrouver en vol plané.",
+    "Il vous reste peu de kérosène. Robot de ravitaillement, sans traîner.",
+    "Attention au carburant, pilote. On ne pousse pas un réacteur à sec.",
+  ],
+  fuelCritical:[
+    "Carburant critique ! Ravitaillez maintenant ou vous rentrez à pied.",
+    "Réservoir presque vide. C'est votre dernière chance de ravitailler.",
+  ],
+  /* munitions basses */
+  ammo:[
+    "Munitions en baisse. Pensez au robot de réarmement.",
+    "Vous tirez vite, pilote. Il ne vous reste plus grand-chose dans les soutes.",
+    "Stock d'obus faible. Réapprovisionnez avant le prochain contact.",
+  ],
+  ammoEmpty:[
+    "Vous êtes à sec ! Plus une seule munition, réarmement immédiat.",
+    "Soutes vides. Vous ne servez plus à rien là-haut, réarmez.",
+  ],
+  /* mission robot terminée */
+  robotDone:[
+    "Robot rentré, opération terminée. Vous pouvez repartir.",
+    "Support terminé. L'appareil est de nouveau opérationnel.",
+    "Les mécaniciens ont fait leur part. À vous de jouer maintenant.",
+  ],
+  /* décrochage */
+  stall:[
+    "Vous décrochez ! Rendez la main et reprenez de la vitesse.",
+    "Perte de portance ! Piquez, tout de suite.",
+  ],
+};
+
+/* délai minimum entre deux messages d'un même type, en secondes */
+const chiefCooldown = {kill:6, killStreak:12, damage:7, damageHeavy:14,
+                       fuel:30, fuelCritical:20, ammo:30, ammoEmpty:20,
+                       robotDone:4, stall:12};
+
+const Chief = {
+  el: document.getElementById('briefing-text'),
+  full:'', shown:0, speed:58,      /* caractères par seconde */
+  idle:0, nextAmbient:12,
+  lastAt:{}, lastPick:{}, lastCtx:null,
+
+  /* tirage sans répétition immédiate dans un même répertoire */
+  pick(kind){
+    const pool=chiefLines[kind]; if(!pool||!pool.length) return '';
+    let i=Math.floor(Math.random()*pool.length);
+    if(pool.length>1 && i===this.lastPick[kind]) i=(i+1)%pool.length;
+    this.lastPick[kind]=i; return pool[i];
+  },
+  say(text){
+    this.full=text; this.shown=0; this.idle=0;
+    this.nextAmbient = 15 + Math.random()*12;
+    this.el.classList.add('typing');
+  },
+  /* message d'évènement : prioritaire, mais limité par un délai de garde */
+  event(kind, vars){
+    const now=performance.now()/1000;
+    if(now - (this.lastAt[kind] ?? -999) < (chiefCooldown[kind] ?? 8)) return;
+    this.lastAt[kind]=now;
+    let t=this.pick(kind);
+    if(vars) for(const k in vars) t=t.replace('{'+k+'}', vars[k]);
+    this.say(t);
+  },
+  /* message d'ambiance, choisi selon la phase de vol */
+  ambient(){
+    const kind = state.mode==='PARC' ? 'parc'
+               : (state.mode==='ROULAGE'||state.mode==='DECOLLAGE') ? 'roulage'
+               : 'ambient';
+    this.say(this.pick(kind));
+  },
+  update(dt){
+    if(this.shown < this.full.length){
+      const before=Math.floor(this.shown);
+      this.shown=Math.min(this.full.length, this.shown + this.speed*dt);
+      const after=Math.floor(this.shown);
+      if(after!==before){
+        this.el.textContent=this.full.slice(0,after);
+        /* petit tic de téléscripteur, pas à chaque caractère */
+        if(Audio_.ctx && after%4===0) Audio_.tick();
+      }
+      if(this.shown>=this.full.length) this.el.classList.remove('typing');
+      return;
+    }
+    /* message terminé : on enchaîne sur l'ambiance après un temps de lecture */
+    this.idle+=dt;
+    const ctxKind = state.mode==='PARC' ? 'parc' : (state.mode==='VOL' ? 'ambient' : 'roulage');
+    if(this.lastCtx && this.lastCtx!==ctxKind && this.idle>3){ this.lastCtx=ctxKind; this.ambient(); return; }
+    this.lastCtx=ctxKind;
+    if(this.idle>this.nextAmbient) this.ambient();
+  },
+};
+Chief.say(chiefLines.parc[0]);
+/* un clic sur la carte passe au message suivant */
+document.getElementById('briefing-card').addEventListener('click', ()=>{
+  if(Chief.shown < Chief.full.length){ Chief.shown=Chief.full.length; Chief.el.textContent=Chief.full; Chief.el.classList.remove('typing'); }
+  else Chief.ambient();
+  Audio_.click(650,0.04);
+});
+
+/* ===================== SECOUSSE D'IMPACT ===================== */
+const cockpitEl=document.getElementById('cockpit'), impactFlashEl=document.getElementById('impact-flash');
+function impactShake(){
+  cockpitEl.classList.remove('shake'); impactFlashEl.classList.remove('on');
+  void cockpitEl.offsetWidth;               /* relance l'animation même sur impacts rapprochés */
+  cockpitEl.classList.add('shake'); impactFlashEl.classList.add('on');
+}
 
 /* ===================== MESSAGE ===================== */
 let msgTimer=null;
@@ -942,11 +1135,22 @@ function update(dt){
       if(state.mission.type==='repair') state.damage={nose:0,left:0,right:0,engine:0,tail:0};
       if(state.mission.type==='ammo'){ state.ammo=300; state.missiles=4; document.getElementById('ammo-val').textContent=300; document.getElementById('msl-val').textContent=4; }
       flashMessage(missionNames[state.mission.type]+' TERMINÉ');
+      Chief.event('robotDone');
       state.mission=null; missionBar.style.width='0%'; missionLabel.textContent=''; missionPct.textContent='—';
     }
   }
   updateRobotButtons();
   updateFireAvailability();
+
+  /* le chef réagit à l'état de l'appareil, puis fait défiler son texte */
+  if(state.mode!=='PARC'){
+    if(state.fuel<=6) Chief.event('fuelCritical');
+    else if(state.fuel<20) Chief.event('fuel');
+    if(state.ammo<=0 && state.missiles<=0) Chief.event('ammoEmpty');
+    else if(state.ammo<60) Chief.event('ammo');
+    if(state.stall) Chief.event('stall');
+  }
+  Chief.update(dt);
 
   document.getElementById('hud-mode').textContent=state.mode;
   document.getElementById('hud-clock').textContent=fmtClock();
@@ -1240,38 +1444,41 @@ function drawVisualMission(){
   const w=visMisCv.clientWidth, h=visMisCv.clientHeight; const ctx=visMisCtx;
   ctx.clearRect(0,0,w,h);
   ctx.fillStyle='#03120b'; ctx.fillRect(0,0,w,h);
-  const groundY=h*0.72;
-  ctx.strokeStyle='rgba(61,255,176,0.3)'; ctx.beginPath(); ctx.moveTo(0,groundY); ctx.lineTo(w,groundY); ctx.stroke();
+  const groundY=h*0.76;
+  ctx.strokeStyle='rgba(61,255,176,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,groundY); ctx.lineTo(w,groundY); ctx.stroke();
   ctx.fillStyle='rgba(61,255,176,0.08)'; ctx.fillRect(0,groundY,w,h-groundY);
 
-  const cx=w/2, cy=groundY-h*0.14;
-  ctx.strokeStyle='rgba(61,255,176,0.75)'; ctx.lineWidth=1.6;
+  /* unité de dessin unique : la scène garde ses proportions quelle que soit
+     la taille de la carte, au lieu de s'étirer avec elle. */
+  const S=Math.min(w, h*0.85);
+  const cx=w/2, cy=groundY-S*0.17;
+  ctx.strokeStyle='rgba(61,255,176,0.75)'; ctx.lineWidth=Math.max(1.4,S*0.007);
   ctx.beginPath();
-  ctx.moveTo(cx-w*0.16,cy); ctx.lineTo(cx+w*0.16,cy);
-  ctx.moveTo(cx-w*0.05,cy-h*0.09); ctx.lineTo(cx+w*0.05,cy-h*0.09);
-  ctx.lineTo(cx+w*0.02,cy); ctx.moveTo(cx-w*0.05,cy-h*0.09); ctx.lineTo(cx-w*0.02,cy);
+  ctx.moveTo(cx-S*0.30,cy); ctx.lineTo(cx+S*0.30,cy);
+  ctx.moveTo(cx-S*0.09,cy-S*0.17); ctx.lineTo(cx+S*0.09,cy-S*0.17);
+  ctx.lineTo(cx+S*0.04,cy); ctx.moveTo(cx-S*0.09,cy-S*0.17); ctx.lineTo(cx-S*0.04,cy);
   ctx.stroke();
 
   let caption='Aucune mission en cours';
   if(state.mission){
     const t=performance.now()/1000;
-    const bob = Math.sin(t*4)*3;
-    const dx = cx + w*0.22, dy = cy - h*0.05 + bob;
-    drawRobotIcon(ctx, w*0.12, groundY-16, 20, 'rgba(61,255,176,0.85)');
-    ctx.fillStyle='var(--amber)';
-    ctx.beginPath(); ctx.moveTo(dx,dy-6); ctx.lineTo(dx+6,dy+5); ctx.lineTo(dx-6,dy+5); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle='rgba(255,178,56,0.6)'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(dx,dy+6); ctx.lineTo(cx+w*0.05,cy-h*0.04); ctx.stroke();
-    if(state.mission.type==='fuel'){
-      ctx.fillStyle='rgba(255,178,56,0.9)'; ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText('⛽', dx, dy+4);
-      caption='Ravitaillement en cours…';
-    } else if(state.mission.type==='repair'){
-      ctx.fillStyle='rgba(255,178,56,0.9)'; ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText('🔧', dx, dy+4);
-      caption='Réparation en cours…';
-    } else {
-      ctx.fillStyle='rgba(255,178,56,0.9)'; ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText('📦', dx, dy+4);
-      caption='Livraison de munitions…';
-    }
+    const bob=Math.sin(t*4)*S*0.022;
+    const dx=cx+S*0.40, dy=cy-S*0.09+bob;
+    const r=S*0.055;
+    drawRobotIcon(ctx, w*0.10, groundY-S*0.22, S*0.24, 'rgba(61,255,176,0.85)');
+    ctx.fillStyle='#ffb238';
+    ctx.beginPath(); ctx.moveTo(dx,dy-r); ctx.lineTo(dx+r,dy+r*0.85); ctx.lineTo(dx-r,dy+r*0.85); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(255,178,56,0.6)'; ctx.lineWidth=Math.max(1,S*0.005);
+    ctx.beginPath(); ctx.moveTo(dx,dy+r); ctx.lineTo(cx+S*0.09,cy-S*0.07); ctx.stroke();
+    const glyph = state.mission.type==='fuel' ? '\u26FD' : state.mission.type==='repair' ? '\uD83D\uDD27' : '\uD83D\uDCE6';
+    caption = state.mission.type==='fuel' ? 'Ravitaillement en cours\u2026'
+            : state.mission.type==='repair' ? 'R\u00e9paration en cours\u2026'
+            : 'Livraison de munitions\u2026';
+    ctx.fillStyle='rgba(255,178,56,0.95)'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font=Math.round(Math.max(10,S*0.13))+'px sans-serif';
+    ctx.fillText(glyph, dx, dy+r*2.2);
+    ctx.textBaseline='alphabetic';
   }
   document.getElementById('visual-mission-caption').textContent=caption;
 }
