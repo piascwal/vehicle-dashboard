@@ -57,7 +57,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 }
 #row3-sub{grid-area:row3; display:flex; gap:10px; min-height:0; min-width:0;}
 #col-right{grid-area:colright; display:grid; grid-template-rows: 1fr 0.72fr; gap:10px; min-height:0; min-width:0;}
-#robots-block{align-self:start; min-height:0;}   /* garde sa hauteur de contenu, en haut de la colonne */
+#col-right > *{min-height:0;}
 #tape-alt{grid-area:alt;} #viseur-col{grid-area:viseur;} #tape-spd{grid-area:spd;} #boussole-wrap{grid-area:boussole;}
 
 /* TRES GRAND écran (Tesla 16:9 large, > 1900px) : on garde les proportions du croquis
@@ -78,8 +78,9 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 #topbar .val{font-size:14px; text-shadow:0 0 6px rgba(61,255,176,0.5);}
 
 .led{width:9px; height:9px; border-radius:50%; background:#243024; box-shadow:inset 0 0 2px #000; flex:0 0 auto;}
-.led.on{background:var(--red); box-shadow:0 0 8px var(--red);}
-.led.on.amber{background:var(--amber); box-shadow:0 0 8px var(--amber);}
+.led.on{background:var(--red); box-shadow:0 0 8px var(--red); animation:blink 0.85s steps(1) infinite;}
+.led.on.amber{background:var(--amber); box-shadow:0 0 8px var(--amber); animation:blink 1.15s steps(1) infinite;}
+@media (prefers-reduced-motion:reduce){ .led.on{animation:none;} }
 .blink{animation:blink 0.6s steps(1) infinite;}
 @keyframes blink{50%{opacity:0.15;}}
 
@@ -165,7 +166,8 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 #score-tag{position:absolute; left:5px; bottom:3px; font-size:8px; color:var(--hud-dim); letter-spacing:1px;}
 #boussole-wrap{flex:0 0 38px; border-top:1px solid var(--rivet); background:rgba(0,0,0,0.3); position:relative;}
 #boussole-wrap canvas{display:block; position:absolute; inset:0; width:100%; height:100%;}
-#boussole-label{position:absolute; left:6px; top:2px; font-size:7px; letter-spacing:1px; color:var(--hud-dim);}
+/* le ruban porte maintenant les points cardinaux : le libellé les recouvrait */
+#boussole-label{display:none;}
 
 /* sous-rangée : radar / armement / manche */
 #radar-card{flex:1 1 0; min-width:0;}
@@ -197,7 +199,24 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
   box-shadow:0 3px 6px rgba(0,0,0,0.6);
 }
 
-/* colonne droite : robots + visuel mission */
+/* colonne droite : robots + soutes en haut, visuel mission en bas */
+#col-right-top{display:flex; flex-direction:column; gap:10px; min-height:0;}
+#robots-block{flex:0 0 auto;}
+#munitions-block{flex:1 1 0; min-height:0;}
+#munitions-body{flex:1 1 0; display:flex; flex-direction:column; justify-content:space-evenly; gap:8px; padding:8px 10px; min-height:0;}
+.gauge-row{display:flex; flex-direction:column; gap:4px; flex:0 0 auto;}
+.gauge-head{display:flex; justify-content:space-between; align-items:baseline; font-size:8.5px; letter-spacing:1px;}
+.gauge-lbl{color:var(--hud-dim);}
+.gauge-num{color:var(--hud); font-weight:bold; font-size:10px;}
+.gauge-track{height:9px; background:#0a0d09; border:1px solid var(--rivet); border-radius:5px; overflow:hidden;}
+.gauge-fill{height:100%; width:100%; border-radius:4px; background:linear-gradient(90deg,var(--hud-dim),var(--hud)); transition:width .25s linear;}
+.gauge-fill.low{background:linear-gradient(90deg,#8a6410,var(--amber));}
+.gauge-fill.crit{background:linear-gradient(90deg,#7a1a15,var(--red));}
+.pip-row{display:flex; gap:4px;}
+.pip{flex:1 1 0; height:9px; border-radius:3px; border:1px solid var(--rivet); background:#0a0d09;}
+.pip.on{background:linear-gradient(180deg,var(--hud),var(--hud-dim)); box-shadow:0 0 6px rgba(61,255,176,0.45); border-color:var(--hud-dim);}
+
+/* robots */
 #robots-body{flex:0 0 auto; display:flex; flex-direction:column; padding:6px 10px 8px; gap:7px; min-height:0;}
 #robot-icon{flex:0 0 auto; display:flex; justify-content:center; padding:4px 0 0;}
 #robot-icon svg{width:34px; height:34px; fill:var(--hud); stroke:var(--hud); stroke-width:0.6;}
@@ -250,8 +269,8 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
   #radar-card{flex:1 1 0; min-width:0;}
 
   /* instruments : bandes altitude / vitesse et boussole réduites */
-  #instruments-block{grid-template-columns: 8% 1fr 8%; grid-template-rows: 1fr 26px;}
-  #boussole-wrap{flex:0 0 26px;}
+  #instruments-block{grid-template-columns: 8% 1fr 8%; grid-template-rows: 1fr 30px;}
+  #boussole-wrap{flex:0 0 30px;}
 
   /* organes de pilotage */
   .round-toggle{width:30px; height:30px;}
@@ -309,7 +328,8 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
     grid-template-areas: "manette" "commandes" "instr" "row3" "colright";
   }
   #col-right{display:flex; flex-direction:column;}
-  #robots-block{align-self:auto;}
+  #col-right-top{gap:10px;}
+  #munitions-block{flex:0 0 auto; min-height:150px;}
   #robots-body{flex:1 1 auto; justify-content:space-evenly;}
   #robot-icon{display:flex;}
   #visual-mission-block{flex:0 0 auto; min-height:200px;}
@@ -480,6 +500,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
       </div>
 
     <div id="col-right">
+      <div id="col-right-top">
       <div class="card" id="robots-block">
         <h3>ROBOTS DE SOUTIEN</h3>
         <div id="robot-icon">
@@ -513,6 +534,25 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
           <div id="mission-label"></div>
           <div id="mission-pct-wrap"><span class="lbl">PROGRESSION MISSION</span><br><span class="val" id="mission-pct">—</span></div>
         </div>
+      </div>
+
+      <div class="card" id="munitions-block">
+        <h3>SOUTES</h3>
+        <div id="munitions-body">
+          <div class="gauge-row">
+            <div class="gauge-head"><span class="gauge-lbl">OBUS</span><span class="gauge-num" id="gauge-gun-num">300</span></div>
+            <div class="gauge-track"><div class="gauge-fill" id="gauge-gun"></div></div>
+          </div>
+          <div class="gauge-row">
+            <div class="gauge-head"><span class="gauge-lbl">MISSILES</span><span class="gauge-num" id="gauge-msl-num">4</span></div>
+            <div class="pip-row" id="pip-msl"><i class="pip"></i><i class="pip"></i><i class="pip"></i><i class="pip"></i></div>
+          </div>
+          <div class="gauge-row">
+            <div class="gauge-head"><span class="gauge-lbl">CARBURANT</span><span class="gauge-num" id="gauge-fuel-num">100%</span></div>
+            <div class="gauge-track"><div class="gauge-fill" id="gauge-fuel"></div></div>
+          </div>
+        </div>
+      </div>
       </div>
 
       <div class="card" id="visual-mission-block">
@@ -881,6 +921,26 @@ function updateRobotButtons(){
 }
 const missionNames={fuel:'RAVITAILLEMENT', repair:'RÉPARATION', ammo:'MUNITIONS'};
 
+/* ===================== JAUGES DES SOUTES ===================== */
+const AMMO_MAX=300, MSL_MAX=4;
+const gaugeGun=document.getElementById('gauge-gun'), gaugeGunNum=document.getElementById('gauge-gun-num');
+const gaugeFuel=document.getElementById('gauge-fuel'), gaugeFuelNum=document.getElementById('gauge-fuel-num');
+const gaugeMslNum=document.getElementById('gauge-msl-num');
+const mslPips=Array.from(document.querySelectorAll('#pip-msl .pip'));
+function setGauge(el, frac){
+  const f=Math.max(0,Math.min(1,frac));
+  el.style.width=(f*100)+'%';
+  el.classList.toggle('low', f<0.35 && f>=0.12);
+  el.classList.toggle('crit', f<0.12);
+}
+function updateGauges(){
+  setGauge(gaugeGun, state.ammo/AMMO_MAX); gaugeGunNum.textContent=state.ammo;
+  setGauge(gaugeFuel, state.fuel/100);     gaugeFuelNum.textContent=Math.round(state.fuel)+'%';
+  gaugeMslNum.textContent=state.missiles;
+  for(let i=0;i<mslPips.length;i++) mslPips[i].classList.toggle('on', i<state.missiles);
+}
+updateGauges();
+
 /* ===================== MESSAGES DU CHEF =====================
    Le chef parle en continu : ordres de mission au repos, et réactions
    immédiates aux évènements (cible abattue, impact, carburant, munitions).
@@ -1153,6 +1213,7 @@ function update(dt){
   }
   updateRobotButtons();
   updateFireAvailability();
+  updateGauges();
 
   /* le chef réagit à l'état de l'appareil, puis fait défiler son texte */
   if(state.mode!=='PARC'){
@@ -1257,24 +1318,39 @@ function drawViseur(){
 function drawHeadingStrip(){
   const w=headingCv.clientWidth, h=headingCv.clientHeight; const ctx=headingCtx;
   ctx.clearRect(0,0,w,h);
-  ctx.strokeStyle='rgba(61,255,176,0.5)'; ctx.fillStyle='rgba(61,255,176,0.85)';
-  ctx.font=Math.max(8,h*0.34)+'px Consolas, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  const span=90; const pxPerDeg = w/span;
-  for(let d=-45; d<=45; d+=5){
-    const hd=((state.heading+d)%360+360)%360;
-    const x=w/2+d*pxPerDeg;
-    const major = Math.round(hd)%10===0;
-    ctx.lineWidth=major?1.5:1;
-    ctx.beginPath(); ctx.moveTo(x, major? h*0.15:h*0.32); ctx.lineTo(x, major? h*0.55:h*0.45); ctx.stroke();
-    if(major){
-      let lbl=String(Math.round(hd/10)).padStart(2,'0');
-      const rhd=Math.round(hd);
-      if(rhd===0) lbl='N'; if(rhd===90) lbl='E'; if(rhd===180) lbl='S'; if(rhd===270) lbl='O';
-      ctx.fillText(lbl, x, h*0.78);
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.font='bold '+Math.max(9,h*0.42)+'px Consolas, monospace';
+
+  /* Ruban de points cardinaux. Les graduations sont accrochées à des caps
+     absolus multiples de 15° : elles défilent avec le cap au lieu d'apparaître
+     et disparaître au hasard, comme le faisait la version qui testait
+     Math.round(cap + décalage) % 10 sur un cap fractionnaire. */
+  const NOMS=['N','NE','E','SE','S','SO','O','NO'];
+  const SPAN=270;                      /* les 7 points cardinaux visibles occupent toute la largeur */
+  const PAS=15;                        /* deux graduations intermédiaires entre deux points */
+  const pxParDeg=w/SPAN;
+  const premier=Math.ceil((state.heading-SPAN/2)/PAS)*PAS;
+
+  for(let cap=premier; cap<=state.heading+SPAN/2; cap+=PAS){
+    const x=w/2+(cap-state.heading)*pxParDeg;
+    const rose=((cap%360)+360)%360;
+    const cardinal = rose%45===0;
+    ctx.strokeStyle = cardinal? 'rgba(61,255,176,0.8)' : 'rgba(61,255,176,0.3)';
+    ctx.lineWidth = cardinal? 1.6 : 1;
+    ctx.beginPath();
+    ctx.moveTo(x, cardinal? h*0.10 : h*0.28);
+    ctx.lineTo(x, cardinal? h*0.48 : h*0.42);
+    ctx.stroke();
+    if(cardinal){
+      const nom=NOMS[rose/45];
+      ctx.fillStyle = (nom.length===1)? 'rgba(61,255,176,0.95)' : 'rgba(61,255,176,0.6)';
+      ctx.fillText(nom, x, h*0.76);
     }
   }
-  ctx.strokeStyle='var(--amber)'; ctx.fillStyle='var(--amber)'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.moveTo(w/2, h*0.02); ctx.lineTo(w/2-4,h*0.14); ctx.lineTo(w/2+4,h*0.14); ctx.closePath(); ctx.fill();
+
+  /* index central */
+  ctx.fillStyle='#ffb238'; ctx.strokeStyle='#ffb238'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(w/2, h*0.02); ctx.lineTo(w/2-4,h*0.16); ctx.lineTo(w/2+4,h*0.16); ctx.closePath(); ctx.fill();
 }
 
 function drawAttitude(){
