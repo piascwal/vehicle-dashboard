@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>PLANCHE DE BORD — CHASSE</title>
+<style>
+:root{
+  --black:#05080a; --panel:#1d251b; --panel-lo:#141a12; --rivet:#0d110c;
+  --hud:#3dffb0; --hud-dim:#1c8a63; --amber:#ffb238; --red:#ff3b30;
+  --metal1:#4a5a42; --metal2:#232c1f;
+  font-family:'Consolas','Share Tech Mono','Courier New',monospace;
+}
+*{box-sizing:border-box; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:var(--hud); overflow:hidden;}
+
+#boot{
+  position:fixed; inset:0; background:radial-gradient(ellipse at center,#0c1410 0%,#010202 75%);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; gap:22px; overflow:hidden;
+}
+#boot h1{color:var(--hud); font-size:clamp(18px,3vw,32px); letter-spacing:6px; margin:0; text-shadow:0 0 12px rgba(61,255,176,0.55); text-align:center;}
+#boot p{color:var(--hud-dim); font-size:12px; letter-spacing:2px; margin:0; text-align:center; padding:0 20px;}
+#boot button{
+  background:linear-gradient(#3a4635,#1c2418); color:var(--hud); border:2px solid var(--hud-dim);
+  padding:18px 34px; font-size:15px; letter-spacing:3px; border-radius:6px; cursor:pointer;
+  box-shadow:0 0 18px rgba(61,255,176,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+#boot button:active{transform:translateY(1px);}
+
+#viewport{position:fixed; inset:0; background:#000; overflow:hidden; touch-action:none;}
+#cockpit{
+  position:absolute; inset:0; width:100%; height:100%;
+  display:flex; flex-direction:column; background:var(--black); opacity:0; transition:opacity .6s ease;
+}
+#cockpit.on{opacity:1;}
+
+/* ===================== SYSTEME DE GRILLE ADAPTATIF (3 paliers) ===================== */
+/* GRAND écran (Tesla / bureau large) : grille par défaut, hauteur 100%, zéro scroll */
+#row1{
+  display:grid; grid-template-columns: 260px 260px 260px 260px 1fr;
+  gap:10px; padding:10px 10px 0 10px; flex:0 0 260px;
+}
+#main-row{
+  flex:1 1 0; min-height:0; padding:10px; display:grid; gap:10px;
+  grid-template-columns: 1fr 7.5fr 1.2fr;
+  grid-template-rows: 1fr 260px;
+  grid-template-areas:
+    "manette instr colright"
+    "commandes row3 colright";
+}
+#manette-block{grid-area:manette; min-height:0; min-width:0;}
+#commandes-block{grid-area:commandes; min-height:0; min-width:0;}
+#instruments-block{grid-area:instr; min-height:0; min-width:0;
+  display:grid; grid-template-columns: 66px 1fr 66px; grid-template-rows: 1fr 38px;
+  grid-template-areas: "alt viseur spd" "boussole boussole boussole";
+}
+#row3-sub{grid-area:row3; display:flex; gap:10px; min-height:0; min-width:0;}
+#col-right{grid-area:colright; display:flex; flex-direction:column; gap:10px; min-height:0; min-width:0;}
+#robots-block{flex:1 1 0; min-height:0;}
+#tape-alt{grid-area:alt;} #viseur-col{grid-area:viseur;} #tape-spd{grid-area:spd;} #boussole-wrap{grid-area:boussole;}
+
+/* TRES GRAND écran (Tesla 16:9 large, > 1900px) : on garde les proportions du croquis
+   au lieu d'étirer bord à bord, avec des marges de chaque côté */
+@media (min-width:1900px){
+  #cockpit{max-width:2100px; margin:0 auto; height:100%;}
+}
+
+
+/* MOYEN écran (tablette / fenêtre réduite) : mêmes zones nommées, pistes plus compactes */
+@media (max-width:1300px) and (min-width:881px){
+  #row1{grid-template-columns: 108px 108px 108px 108px 1fr; flex:0 0 108px;}
+  #main-row{grid-template-columns: 104px 1fr 168px; grid-template-rows: 1fr 140px;}
+  #row3-sub{flex-wrap:wrap;}
+  #visual-mission-block{flex:0 0 140px;}
+}
+
+/* PETIT écran (mobile / portrait) : une seule colonne empilée, défilement autorisé */
+@media (max-width:880px), (orientation:portrait){
+  html,body{overflow-y:auto;}
+  #viewport{overflow-y:auto; overflow-x:hidden; touch-action:pan-y;}
+  #cockpit{position:relative; height:auto; min-height:100%;}
+  #row1{grid-template-columns: repeat(2, 1fr); grid-auto-rows:140px; flex:none; height:auto;}
+  #briefing-card{grid-column: span 2; min-height:140px;}
+  #main-row{
+    grid-template-columns: 1fr; grid-template-rows: none; grid-auto-rows:auto; height:auto;
+    grid-template-areas: "manette" "commandes" "instr" "row3" "colright";
+  }
+  #col-right{flex-direction:column;}
+  #robots-block{flex:0 0 auto;}
+  #visual-mission-block{flex:0 0 108px;}
+  #instruments-block{height:320px;}
+  #manette-block{min-height:260px;}
+  #commandes-block{min-height:170px;}
+  #robots-block{min-height:190px;}
+  #row3-sub{flex-wrap:wrap; height:auto;}
+  #row3-sub > .card{flex:1 1 220px; min-height:190px;}
+}
+
+#topbar{
+  display:none;
+  background:linear-gradient(#262f22,#161c12); border-bottom:3px solid var(--rivet);
+  padding:7px 16px; font-size:12px; letter-spacing:2px; color:var(--hud); white-space:nowrap;
+}
+#topbar .grp{display:flex; align-items:center; gap:8px;}
+#topbar .lbl{color:var(--hud-dim); font-size:9px;}
+#topbar .val{font-size:14px; text-shadow:0 0 6px rgba(61,255,176,0.5);}
+
+.led{width:9px; height:9px; border-radius:50%; background:#243024; box-shadow:inset 0 0 2px #000; flex:0 0 auto;}
+.led.on{background:var(--red); box-shadow:0 0 8px var(--red);}
+.led.on.amber{background:var(--amber); box-shadow:0 0 8px var(--amber);}
+.blink{animation:blink 0.6s steps(1) infinite;}
+@keyframes blink{50%{opacity:0.15;}}
+
+.card{
+  background:linear-gradient(#1a2116,#0e120c); border:2px solid var(--rivet); border-radius:8px;
+  display:flex; flex-direction:column; overflow:hidden; min-height:0;
+}
+.card h3, .card .rc-title{
+  flex:0 0 auto; text-align:center; font-size:9px; letter-spacing:1.5px; color:var(--hud-dim); font-weight:normal;
+  padding:4px 2px; border-bottom:1px solid var(--rivet); background:rgba(0,0,0,0.3); margin:0;
+}
+
+/* ---- rangée 1 : alerte / etat / assiette / carburant / briefing ---- */
+#alerte-body{flex:1 1 0; display:flex; flex-direction:column; justify-content:center; gap:7px; padding:4px 10px;}
+.alert-row{display:flex; align-items:center; gap:7px; font-size:10px; letter-spacing:1px; color:var(--hud-dim);}
+
+#etat-legend{display:flex; justify-content:space-around; font-size:7px; color:var(--hud-dim); padding:3px 2px 0; flex:0 0 auto;}
+.dot{display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:2px;}
+.dot.ok{background:#3dffb0;} .dot.dmg{background:#ffb238;} .dot.crit{background:#ff3b30;}
+#damage-canvas-wrap{flex:1 1 0; min-height:0; position:relative;}
+#damage-canvas-wrap canvas{width:100%; height:100%; display:block; position:absolute; inset:0;}
+
+.rc-canvas-wrap{flex:1 1 0; position:relative; min-height:0;}
+.rc-canvas-wrap canvas{display:block; position:absolute; inset:0; width:100%; height:100%;}
+
+#briefing-card{cursor:pointer;}
+#briefing-body{flex:1 1 0; display:flex; flex-direction:column; padding:8px 12px; min-height:0;}
+#briefing-text{flex:1 1 0; font-size:11px; line-height:1.55; color:var(--hud-dim); font-family:Georgia,serif; overflow:hidden;}
+#briefing-sign{flex:0 0 auto; align-self:flex-end; font-style:italic; font-size:11px; color:var(--hud); font-family:Georgia,serif;}
+
+/* ---- rangée principale ---- */
+/* manette des gaz */
+#throttle-quad{position:relative; flex:1 1 0; min-height:0; display:flex; justify-content:center; touch-action:none;
+  background:linear-gradient(135deg,#5a5648,#2c2a22 60%,#403c30); border:2px solid #1a1812; border-radius:6px;
+  box-shadow:inset 0 0 12px rgba(0,0,0,0.6); padding:10px 0; margin:8px 10px 6px;}
+#throttle-slot{position:relative; width:12px; height:100%; background:linear-gradient(90deg,#050504,#141210,#050504);
+  border:1px solid #000; border-radius:6px; box-shadow:inset 0 0 6px #000;}
+.notch{position:absolute; left:-8px; width:26px; height:2px; background:#8a7f5e;}
+.notch.mil{background:var(--amber); height:2px;}
+.notch.ab{background:var(--red); height:3px;}
+.notch-lbl{position:absolute; left:20px; font-size:6.5px; color:#c8bd94; letter-spacing:0.5px; transform:translateY(-50%);}
+#throttle-lever{position:absolute; left:50%; transform:translateX(-50%); bottom:0; width:38px; height:30px;
+  background:repeating-linear-gradient(180deg,#8a8368 0px,#8a8368 3px,#4a4636 3px,#4a4636 6px);
+  border:1px solid #0a0806; border-radius:4px;
+  box-shadow:0 3px 6px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -2px 3px rgba(0,0,0,0.4);}
+#throttle-val{font-size:9px; text-align:center; color:var(--hud-dim); flex:0 0 auto; padding-bottom:6px;}
+
+/* commandes (moteur/train/volet) */
+#commandes-body{flex:1 1 0; display:flex; flex-direction:column; justify-content:space-evenly; padding:2px 10px;}
+.cmd-row{display:flex; align-items:center; justify-content:space-between; gap:6px;}
+.cmd-lbl{font-size:9.5px; letter-spacing:1px; color:var(--hud-dim);}
+.round-toggle{width:38px; height:38px; border-radius:50%; cursor:pointer; position:relative; flex:0 0 auto;
+  background:radial-gradient(circle at 35% 30%,#4a5a42,#161c12); border:3px solid #0a0d09;
+  box-shadow:0 3px 6px rgba(0,0,0,0.6), inset 0 0 8px rgba(0,0,0,0.5);}
+.round-toggle .ring{position:absolute; inset:4px; border-radius:50%; border:2px solid #243024; transition:all .3s;}
+.round-toggle.spooling .ring{border-color:var(--amber); box-shadow:0 0 10px var(--amber);}
+.round-toggle.on .ring{border-color:var(--hud); box-shadow:0 0 12px var(--hud);}
+.round-toggle.armed .ring{border-color:var(--red); box-shadow:0 0 12px var(--red);}
+.round-toggle:active{transform:translateY(1px);}
+
+/* bloc instruments combiné */
+.tape-col{display:flex; flex-direction:column; border-right:1px solid var(--rivet); position:relative;}
+.tape-col.right{border-right:none; border-left:1px solid var(--rivet);}
+.tape-title{flex:0 0 auto; text-align:center; font-size:8px; letter-spacing:0.5px; color:var(--hud-dim); padding:3px 1px;}
+.tape-canvas-wrap{flex:1 1 0; position:relative; min-height:0;}
+.tape-canvas-wrap canvas{display:block; position:absolute; inset:0; width:100%; height:100%;}
+.tape-center-line{position:absolute; left:0; right:0; top:50%; height:2px; background:var(--hud); box-shadow:0 0 6px var(--hud);}
+.tape-readout{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  background:var(--panel-lo); border:1px solid var(--hud-dim); color:var(--hud);
+  padding:2px 4px; font-size:11px; font-weight:bold; border-radius:2px; min-width:32px; text-align:center;
+}
+#viseur-col{display:flex; flex-direction:column; background:#03120b;}
+#viseur-title{flex:0 0 auto; text-align:center; font-size:9px; letter-spacing:1.5px; color:var(--hud-dim); padding:3px 1px;}
+#viseur-canvas-wrap{flex:1 1 0; position:relative; min-height:0;}
+#viseur-canvas-wrap canvas{display:block; position:absolute; inset:0; width:100%; height:100%;}
+#msg-center{
+  position:absolute; left:50%; top:6%; transform:translate(-50%,0); font-size:11px; letter-spacing:2px;
+  color:var(--amber); text-shadow:0 0 10px rgba(255,178,56,0.7); pointer-events:none; text-align:center;
+  opacity:0; transition:opacity .3s; width:92%;
+}
+#msg-center.show{opacity:1;}
+#score-tag{position:absolute; left:5px; bottom:3px; font-size:8px; color:var(--hud-dim); letter-spacing:1px;}
+#boussole-wrap{flex:0 0 38px; border-top:1px solid var(--rivet); background:rgba(0,0,0,0.3); position:relative;}
+#boussole-wrap canvas{display:block; position:absolute; inset:0; width:100%; height:100%;}
+#boussole-label{position:absolute; left:6px; top:2px; font-size:7px; letter-spacing:1px; color:var(--hud-dim);}
+
+/* sous-rangée : radar / armement / manche */
+#radar-card{flex:0 0 210px;}
+#armement-block{flex:1 1 0; min-width:150px;}
+#armement-body{flex:1 1 0; display:flex; flex-direction:column; gap:6px; padding:6px 10px 8px; min-height:0;}
+.arm-row{display:flex; align-items:center; justify-content:space-between;}
+#weapon-toggle{display:flex; border:1px solid var(--hud-dim); border-radius:4px; overflow:hidden; flex:0 0 auto;}
+#weapon-toggle div{flex:1; text-align:center; font-size:9px; padding:5px 2px; letter-spacing:0.5px; cursor:pointer; color:var(--hud-dim);}
+#weapon-toggle div.sel{background:var(--hud-dim); color:#04150d; font-weight:bold;}
+#fire-btn{
+  background:linear-gradient(#5a1414,#2c0a0a); border:2px solid var(--red); color:#ffdcd8;
+  border-radius:6px; font-size:11px; letter-spacing:2px; padding:7px; text-align:center;
+  box-shadow:0 0 10px rgba(255,59,48,0.25); cursor:pointer; flex:1 1 0; display:flex; align-items:center; justify-content:center;
+}
+#fire-btn:active, #fire-btn.firing{background:linear-gradient(#a02020,#5a1010); box-shadow:0 0 20px rgba(255,59,48,0.6);}
+#fire-btn.disabled{opacity:0.35; box-shadow:none;}
+#ammo-readout{display:flex; justify-content:space-between; font-size:9.5px; flex:0 0 auto; color:var(--hud);}
+
+#manche-block{flex:0 0 190px;}
+#joy-zone{
+  position:relative; width:96px; height:96px; margin:auto; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, rgba(80,100,75,0.35), rgba(10,14,9,0.55));
+  border:2px solid var(--rivet); touch-action:none;
+}
+#joy-stick{
+  position:absolute; width:40px; height:40px; border-radius:50%; left:28px; top:28px;
+  background:radial-gradient(circle at 35% 30%,#5a6a52,#232c1f); border:2px solid #0a0d09;
+  box-shadow:0 3px 6px rgba(0,0,0,0.6);
+}
+
+/* colonne droite : robots + visuel mission */
+#robots-body{flex:1 1 0; display:flex; flex-direction:column; justify-content:space-evenly; padding:6px 10px 8px; gap:6px; min-height:0;}
+#robot-icon{flex:0 0 auto; display:flex; justify-content:center; padding:4px 0 0;}
+#robot-icon svg{width:34px; height:34px; fill:var(--hud); stroke:var(--hud); stroke-width:0.6;}
+.robot-row{display:flex; justify-content:space-between; gap:8px; flex:0 0 auto;}
+.robot-item{display:flex; flex-direction:column; align-items:center; gap:5px; flex:1 1 0; min-width:0;}
+.robot-lbl{font-size:7px; letter-spacing:0.3px; color:var(--hud-dim); text-align:center; line-height:1.25; white-space:normal; overflow-wrap:break-word; width:100%;}
+.robot-btn{
+  width:44px; height:44px; border-radius:8px; cursor:pointer; flex:0 0 auto;
+  background:linear-gradient(#2c3a26,#161c12); border:1px solid var(--hud-dim);
+  display:flex; align-items:center; justify-content:center;
+}
+.robot-btn svg{width:20px; height:20px; flex:0 0 auto; color:var(--hud); fill:currentColor;}
+.robot-btn:active{transform:translateY(1px);}
+.robot-btn.disabled{opacity:0.35; cursor:default;}
+#mission-bar-wrap{height:8px; background:#0a0d09; border:1px solid var(--rivet); border-radius:4px; overflow:hidden; flex:0 0 auto;}
+#mission-bar{height:100%; width:0%; background:linear-gradient(90deg,var(--hud-dim),var(--hud)); transition:width .1s linear;}
+#mission-label{font-size:8.5px; color:var(--hud-dim); text-align:center; min-height:20px; flex:0 0 auto;}
+#mission-pct-wrap{flex:0 0 auto; text-align:center;}
+#mission-pct-wrap .lbl{font-size:8px; color:var(--hud-dim); letter-spacing:1px;}
+#mission-pct-wrap .val{font-size:15px; color:var(--hud); font-weight:bold;}
+
+#visual-mission-block{flex:0 0 260px;}
+#visual-mission-canvas-wrap{flex:1 1 0; position:relative; min-height:0;}
+#visual-mission-canvas-wrap canvas{display:block; position:absolute; inset:0; width:100%; height:100%;}
+#visual-mission-caption{font-size:8px; color:var(--hud-dim); text-align:center; padding:3px 4px 5px; flex:0 0 auto;}
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <h1>F-CLD SIMULATEUR</h1>
+  <p>PLANCHE DE BORD — LE PARE-BRISE EST LA VITRE DE L'AVION<br>POSER LE DOIGT POUR DÉMARRER LES SYSTÈMES</p>
+  <button id="boot-btn">ALIMENTATION ▸ ON</button>
+</div>
+
+<div id="viewport">
+<div id="cockpit">
+  <div id="topbar">
+    <div class="grp"><span class="lbl">MODE</span><span class="val" id="hud-mode">PARC</span></div>
+    <div class="grp"><span class="lbl">HEURE</span><span class="val" id="hud-clock">00:00</span></div>
+  </div>
+
+  <div id="row1">
+    <div class="card" id="alerte-card">
+      <h3>ALERTE</h3>
+      <div id="alerte-body">
+        <div class="alert-row"><span class="led" id="alert-carbu"></span>CARBU</div>
+        <div class="alert-row"><span class="led" id="alert-etat"></span>ÉTAT</div>
+        <div class="alert-row"><span class="led" id="alert-arme"></span>ARME</div>
+      </div>
+    </div>
+
+    <div class="card" id="etat-card">
+      <h3>ÉTAT</h3>
+      <div id="etat-legend"><span><i class="dot ok"></i>OK</span><span><i class="dot dmg"></i>DOM.</span><span><i class="dot crit"></i>CRIT.</span></div>
+      <div id="damage-canvas-wrap"><canvas id="damage-canvas"></canvas></div>
+    </div>
+
+    <div class="card" id="assiette-card">
+      <h3>ASSIETTE</h3>
+      <div class="rc-canvas-wrap"><canvas id="attitude-canvas"></canvas></div>
+    </div>
+
+    <div class="card" id="carburant-card">
+      <h3>CARBURANT</h3>
+      <div class="rc-canvas-wrap"><canvas id="fuel-canvas"></canvas></div>
+    </div>
+
+    <div class="card" id="briefing-card">
+      <h3>BRIEFING MISSION</h3>
+      <div id="briefing-body">
+        <div id="briefing-text"></div>
+        <div id="briefing-sign">— Le Chef</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="main-row">
+      <div class="card" id="manette-block">
+        <h3>MANETTE DES GAZ</h3>
+        <div id="throttle-quad">
+          <div id="throttle-slot">
+            <div class="notch" style="bottom:0%"></div><div class="notch-lbl" style="bottom:-4px;">RALENTI</div>
+            <div class="notch" style="bottom:45%"></div>
+            <div class="notch mil" style="bottom:88%"></div><div class="notch-lbl" style="bottom:88%;">MIL</div>
+            <div class="notch ab" style="bottom:100%"></div><div class="notch-lbl" style="bottom:100%;">PC</div>
+          </div>
+          <div id="throttle-lever"></div>
+        </div>
+        <div id="throttle-val">GAZ 0%</div>
+      </div>
+
+      <div class="card" id="commandes-block">
+        <h3>COMMANDES</h3>
+        <div id="commandes-body">
+          <div class="cmd-row"><span class="cmd-lbl">MOTEUR</span><div class="round-toggle" id="btn-moteur"><div class="ring"></div></div></div>
+          <div class="cmd-row"><span class="cmd-lbl">TRAIN</span><div class="round-toggle on" id="btn-train"><div class="ring"></div></div></div>
+          <div class="cmd-row"><span class="cmd-lbl">VOLET</span><div class="round-toggle" id="btn-volet"><div class="ring"></div></div></div>
+        </div>
+      </div>
+
+      <div class="card" id="instruments-block">
+          <div class="tape-col" id="tape-alt">
+            <div class="tape-title">ALTITUDE</div>
+            <div class="tape-canvas-wrap"><canvas id="alt-canvas"></canvas><div class="tape-center-line"></div><div class="tape-readout" id="alt-readout">0</div></div>
+          </div>
+          <div id="viseur-col">
+            <div id="viseur-title">VISEUR</div>
+            <div id="viseur-canvas-wrap">
+              <canvas id="viseur-canvas"></canvas>
+              <div id="msg-center"></div>
+              <div id="score-tag">ABATTUS : <span id="score-val">0</span></div>
+            </div>
+          </div>
+          <div class="tape-col right" id="tape-spd">
+            <div class="tape-title">VITESSE</div>
+            <div class="tape-canvas-wrap"><canvas id="spd-canvas"></canvas><div class="tape-center-line"></div><div class="tape-readout" id="spd-readout">0</div></div>
+          </div>
+        <div id="boussole-wrap"><span id="boussole-label">BOUSSOLE</span><canvas id="heading-strip-canvas"></canvas></div>
+      </div>
+
+      <div id="row3-sub">
+        <div class="card" id="manche-block">
+          <h3>MANCHE</h3>
+          <div class="rc-canvas-wrap"><div id="joy-zone"><div id="joy-stick"></div></div></div>
+        </div>
+
+        <div class="card" id="armement-block">
+          <h3>ARMEMENT</h3>
+          <div id="armement-body">
+            <div class="arm-row"><span class="cmd-lbl">ACTIVER</span><div class="round-toggle" id="btn-arm"><div class="ring"></div></div></div>
+            <div id="weapon-toggle">
+              <div class="sel" id="wsel-gun">MITRAILLEUSE</div>
+              <div id="wsel-msl">MISSILE</div>
+            </div>
+            <div id="ammo-readout"><span>MUN <span id="ammo-val">300</span></span><span>MSL <span id="msl-val">4</span></span></div>
+            <div id="fire-btn" class="disabled">FEU</div>
+          </div>
+        </div>
+
+        <div class="card" id="radar-card">
+          <h3>RADAR</h3>
+          <div class="rc-canvas-wrap"><canvas id="radar-canvas"></canvas></div>
+        </div>
+      </div>
+
+    <div id="col-right">
+      <div class="card" id="robots-block">
+        <h3>ROBOTS DE SOUTIEN</h3>
+        <div id="robot-icon">
+          <svg viewBox="0 0 24 24">
+            <rect x="6" y="9" width="12" height="10" rx="2"/>
+            <rect x="9" y="3" width="6" height="6" rx="1.5"/>
+            <line x1="12" y1="3" x2="12" y2="1"/>
+            <circle cx="12" cy="1" r="1"/>
+            <circle cx="9.5" cy="6" r="1" fill="#04150d" stroke="none"/>
+            <circle cx="14.5" cy="6" r="1" fill="#04150d" stroke="none"/>
+            <rect x="3" y="11" width="3" height="6" rx="1.5"/>
+            <rect x="18" y="11" width="3" height="6" rx="1.5"/>
+          </svg>
+        </div>
+        <div id="robots-body">
+          <div class="robot-row">
+            <div class="robot-item">
+              <span class="robot-lbl">RAVITAILLEMENT</span>
+              <div class="robot-btn" id="btn-fuel"><svg viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 16a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+            </div>
+            <div class="robot-item">
+              <span class="robot-lbl">RÉPARATION</span>
+              <div class="robot-btn" id="btn-repair"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.1 2.1-2-2 2.1-2.1z"/></svg></div>
+            </div>
+            <div class="robot-item">
+              <span class="robot-lbl">MUNITIONS</span>
+              <div class="robot-btn" id="btn-ammo"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="9" rx="2"/><rect x="9" y="13" width="6" height="8" opacity="0.7"/></svg></div>
+            </div>
+          </div>
+          <div id="mission-bar-wrap"><div id="mission-bar"></div></div>
+          <div id="mission-label"></div>
+          <div id="mission-pct-wrap"><span class="lbl">PROGRESSION MISSION</span><br><span class="val" id="mission-pct">—</span></div>
+        </div>
+      </div>
+
+      <div class="card" id="visual-mission-block">
+        <h3>VISUEL MISSION ROBOT</h3>
+        <div id="visual-mission-canvas-wrap"><canvas id="visual-mission-canvas"></canvas></div>
+        <div id="visual-mission-caption">Aucune mission en cours</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+let resizeTimer=null;
+function onResize(){
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{ if(typeof setupCanvases==='function') setupCanvases(); }, 80);
+}
+window.addEventListener('resize', onResize);
+window.addEventListener('orientationchange', onResize);
+
+/* ===================== ETAT ===================== */
+const state = {
+  mode:'PARC',
+  engineOn:false, engineSpool:0,
+  throttle:0,
+  speed:0, altitude:0, heading:90, pitch:0, bank:0,
+  fuel:100,
+  gearDown:true, flapsDown:false,
+  masterArm:false,
+  weapon:'GUN',
+  ammo:300, missiles:4,
+  score:0,
+  enemies:[],
+  lockTarget:null, lockProgress:0,
+  missileShots:[],
+  damage:{nose:0, left:0, right:0, engine:0, tail:0},
+  mission:null,
+  vspeed:0, stall:false, crashed:false,
+  clockStart:Date.now(),
+};
+
+function fmtClock(){
+  const d = new Date(state.clockStart + performance.now());
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
+/* ===================== AUDIO ===================== */
+const Audio_ = {
+  ctx:null, master:null,
+  engineOsc1:null, engineOsc2:null, engineNoise:null, engineGain:null, engineFilter:null,
+  abGain:null, windGain:null,
+  init(){
+    this.ctx = new (window.AudioContext||window.webkitAudioContext)();
+    this.master = this.ctx.createGain(); this.master.gain.value=0.85; this.master.connect(this.ctx.destination);
+    this._buildEngine(); this._buildWind();
+  },
+  _noiseBuffer(sec){
+    const c=this.ctx; const buf=c.createBuffer(1,c.sampleRate*sec,c.sampleRate); const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; return buf;
+  },
+  _buildEngine(){
+    const c=this.ctx;
+    this.engineOsc1=c.createOscillator(); this.engineOsc1.type='sawtooth';
+    this.engineOsc2=c.createOscillator(); this.engineOsc2.type='sawtooth'; this.engineOsc2.detune.value=9;
+    this.engineFilter=c.createBiquadFilter(); this.engineFilter.type='lowpass'; this.engineFilter.frequency.value=900;
+    this.engineGain=c.createGain(); this.engineGain.gain.value=0;
+    const noiseSrc=c.createBufferSource(); noiseSrc.buffer=this._noiseBuffer(2); noiseSrc.loop=true;
+    const noiseFilter=c.createBiquadFilter(); noiseFilter.type='bandpass'; noiseFilter.frequency.value=1200; noiseFilter.Q.value=0.6;
+    this.engineNoise=c.createGain(); this.engineNoise.gain.value=0;
+    noiseSrc.connect(noiseFilter); noiseFilter.connect(this.engineNoise); this.engineNoise.connect(this.engineFilter);
+    this.engineOsc1.connect(this.engineFilter); this.engineOsc2.connect(this.engineFilter);
+    this.engineFilter.connect(this.engineGain); this.engineGain.connect(this.master);
+    this.engineOsc1.start(); this.engineOsc2.start(); noiseSrc.start();
+    const abSrc=c.createBufferSource(); abSrc.buffer=this._noiseBuffer(2); abSrc.loop=true;
+    const abFilter=c.createBiquadFilter(); abFilter.type='lowpass'; abFilter.frequency.value=350;
+    this.abGain=c.createGain(); this.abGain.gain.value=0;
+    abSrc.connect(abFilter); abFilter.connect(this.abGain); this.abGain.connect(this.master); abSrc.start();
+  },
+  _buildWind(){
+    const c=this.ctx; const src=c.createBufferSource(); src.buffer=this._noiseBuffer(2); src.loop=true;
+    const f=c.createBiquadFilter(); f.type='highpass'; f.frequency.value=1800;
+    this.windGain=c.createGain(); this.windGain.gain.value=0;
+    src.connect(f); f.connect(this.windGain); this.windGain.connect(this.master); src.start();
+  },
+  updateEngine(spool, throttle, speed){
+    const t=this.ctx.currentTime; const rpm=0.18+spool*0.82; const base=55+rpm*220;
+    this.engineOsc1.frequency.setTargetAtTime(base,t,0.08);
+    this.engineOsc2.frequency.setTargetAtTime(base*1.5,t,0.08);
+    this.engineFilter.frequency.setTargetAtTime(500+rpm*3200,t,0.15);
+    this.engineGain.gain.setTargetAtTime(spool>0.02?0.10+rpm*0.22:0,t,0.2);
+    this.engineNoise.gain.setTargetAtTime(spool>0.02?0.05+rpm*0.12:0,t,0.2);
+    const ab=Math.max(0,(throttle-0.9))*10;
+    this.abGain.gain.setTargetAtTime(ab*0.5,t,0.1);
+    this.windGain.gain.setTargetAtTime(Math.min(0.22,speed/2200),t,0.3);
+  },
+  click(freq=700,dur=0.03){
+    const c=this.ctx,t=c.currentTime;
+    const o=c.createOscillator(); o.type='square'; o.frequency.value=freq;
+    const g=c.createGain(); g.gain.setValueAtTime(0.18,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t+dur+0.02);
+  },
+  gunshot(){
+    const c=this.ctx,t=c.currentTime;
+    const src=c.createBufferSource(); src.buffer=this._noiseBuffer(0.1);
+    const f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1600; f.Q.value=1.1;
+    const g=c.createGain(); g.gain.setValueAtTime(0.5,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.07);
+    src.connect(f); f.connect(g); g.connect(this.master); src.start(t); src.stop(t+0.08);
+  },
+  missileLaunch(){
+    const c=this.ctx,t=c.currentTime; this.click(300,0.05);
+    const src=c.createBufferSource(); src.buffer=this._noiseBuffer(1.6);
+    const f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.setValueAtTime(300,t);
+    f.frequency.exponentialRampToValueAtTime(2600,t+0.5); f.frequency.exponentialRampToValueAtTime(600,t+1.5);
+    const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.55,t+0.15);
+    g.gain.exponentialRampToValueAtTime(0.0005,t+1.6);
+    src.connect(f); f.connect(g); g.connect(this.master); src.start(t); src.stop(t+1.65);
+  },
+  explosion(){
+    const c=this.ctx,t=c.currentTime;
+    const src=c.createBufferSource(); src.buffer=this._noiseBuffer(1.2);
+    const f=c.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(2200,t);
+    f.frequency.exponentialRampToValueAtTime(80,t+0.9);
+    const g=c.createGain(); g.gain.setValueAtTime(0.7,t); g.gain.exponentialRampToValueAtTime(0.001,t+1.1);
+    src.connect(f); f.connect(g); g.connect(this.master); src.start(t); src.stop(t+1.2);
+  },
+  lockBeep(locked){ this.click(locked?1500:900, locked?0.09:0.035); },
+  droneWhirr(){
+    const c=this.ctx,t=c.currentTime;
+    const o=c.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(220,t);
+    const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.06,t+0.2);
+    g.gain.linearRampToValueAtTime(0.0001,t+0.9);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t+1);
+  },
+  warnTone(){
+    const c=this.ctx,t=c.currentTime;
+    [0,0.18].forEach(dt=>{
+      const o=c.createOscillator(); o.type='square'; o.frequency.value=740;
+      const g=c.createGain(); g.gain.setValueAtTime(0.001,t+dt); g.gain.linearRampToValueAtTime(0.22,t+dt+0.01);
+      g.gain.linearRampToValueAtTime(0.001,t+dt+0.14);
+      o.connect(g); g.connect(this.master); o.start(t+dt); o.stop(t+dt+0.16);
+    });
+  },
+  hitTone(){
+    const c=this.ctx,t=c.currentTime;
+    const o=c.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(180,t);
+    o.frequency.exponentialRampToValueAtTime(60,t+0.3);
+    const g=c.createGain(); g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.35);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t+0.4);
+  }
+};
+
+/* ===================== BOOT ===================== */
+document.getElementById('boot-btn').addEventListener('click', ()=>{
+  Audio_.init();
+  document.getElementById('boot').style.display='none';
+  document.getElementById('cockpit').classList.add('on');
+  if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+  setTimeout(setupCanvases, 60);
+  requestAnimationFrame(loop);
+}, {once:true});
+
+/* ===================== CANVAS ===================== */
+function fitCanvas(cv){
+  const dpr=window.devicePixelRatio||1;
+  const w=cv.clientWidth||1, h=cv.clientHeight||1;
+  cv.width=Math.max(2,w*dpr); cv.height=Math.max(2,h*dpr);
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); return ctx;
+}
+let altCtx,spdCtx,viseurCtx,attCtx,headingCtx,fuelCtx,dmgCtx,radarCtx,visMisCtx;
+let altCv,spdCv,viseurCv,attCv,headingCv,fuelCv,dmgCv,radarCv,visMisCv;
+function setupCanvases(){
+  altCv=document.getElementById('alt-canvas'); altCtx=fitCanvas(altCv);
+  spdCv=document.getElementById('spd-canvas'); spdCtx=fitCanvas(spdCv);
+  viseurCv=document.getElementById('viseur-canvas'); viseurCtx=fitCanvas(viseurCv);
+  attCv=document.getElementById('attitude-canvas'); attCtx=fitCanvas(attCv);
+  headingCv=document.getElementById('heading-strip-canvas'); headingCtx=fitCanvas(headingCv);
+  fuelCv=document.getElementById('fuel-canvas'); fuelCtx=fitCanvas(fuelCv);
+  dmgCv=document.getElementById('damage-canvas'); dmgCtx=fitCanvas(dmgCv);
+  radarCv=document.getElementById('radar-canvas'); radarCtx=fitCanvas(radarCv);
+  visMisCv=document.getElementById('visual-mission-canvas'); visMisCtx=fitCanvas(visMisCv);
+}
+setTimeout(setupCanvases, 30);
+setupCanvases();
+
+/* ===================== MANETTE DES GAZ (levier vintage) ===================== */
+const throttleQuad = document.getElementById('throttle-quad');
+const throttleLever = document.getElementById('throttle-lever');
+let throttleDrag=false;
+function setThrottleFromY(clientY){
+  const r = throttleQuad.getBoundingClientRect();
+  let f = 1 - ((clientY - r.top)/r.height);
+  f = Math.max(0, Math.min(1, f));
+  state.throttle = f;
+  const leverH = throttleLever.offsetHeight || 76;
+  const maxBottom = Math.max(0, r.height - leverH - 4);
+  throttleLever.style.bottom = (4 + f*maxBottom)+'px';
+  document.getElementById('throttle-val').textContent = 'GAZ '+Math.round(f*100)+'%'+(f>0.9?' PC':'');
+}
+throttleQuad.addEventListener('pointerdown', e=>{e.preventDefault(); throttleDrag=true; setThrottleFromY(e.clientY); throttleQuad.setPointerCapture(e.pointerId);});
+throttleQuad.addEventListener('pointermove', e=>{if(throttleDrag){ e.preventDefault(); setThrottleFromY(e.clientY);} });
+throttleQuad.addEventListener('pointerup', e=>{throttleDrag=false;});
+throttleQuad.addEventListener('pointercancel', e=>{throttleDrag=false;});
+setTimeout(()=>setThrottleFromY(1e9), 40);
+
+/* ===================== JOYSTICK ===================== */
+let joyActive=false, joyDX=0, joyDY=0;
+const joyZone=document.getElementById('joy-zone');
+const joyStick=document.getElementById('joy-stick');
+function joyMove(clientX,clientY){
+  const r=joyZone.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2;
+  let dx=clientX-cx, dy=clientY-cy; const max=r.width/2-20;
+  const dist=Math.hypot(dx,dy);
+  if(dist>max){dx=dx/dist*max; dy=dy/dist*max;}
+  joyStick.style.left=(28+ (dx/max)*28)+'px'; joyStick.style.top=(28+ (dy/max)*28)+'px';
+  joyDX=dx/max; joyDY=dy/max;
+}
+function joyReset(){ joyStick.style.left='28px'; joyStick.style.top='28px'; joyDX=0; joyDY=0; }
+joyZone.addEventListener('pointerdown', e=>{e.preventDefault(); joyActive=true; joyMove(e.clientX,e.clientY); joyZone.setPointerCapture(e.pointerId);});
+joyZone.addEventListener('pointermove', e=>{if(joyActive){ e.preventDefault(); joyMove(e.clientX,e.clientY);} });
+joyZone.addEventListener('pointerup', e=>{joyActive=false; joyReset();});
+joyZone.addEventListener('pointercancel', e=>{joyActive=false; joyReset();});
+
+/* ===================== COMMANDES (ronds) ===================== */
+const btnTrain=document.getElementById('btn-train'), btnVolet=document.getElementById('btn-volet'), btnMoteur=document.getElementById('btn-moteur');
+btnTrain.addEventListener('click', ()=>{
+  if(state.crashed) return;
+  state.gearDown=!state.gearDown; btnTrain.classList.toggle('on', state.gearDown); Audio_.click(500,0.08);
+});
+btnVolet.addEventListener('click', ()=>{
+  if(state.crashed) return;
+  state.flapsDown=!state.flapsDown; btnVolet.classList.toggle('on', state.flapsDown); Audio_.click(500,0.08);
+});
+btnMoteur.addEventListener('click', ()=>{
+  if(state.crashed) return;
+  if(!state.engineOn){
+    state.engineOn=true; btnMoteur.classList.add('spooling');
+    Audio_.click(500,0.05);
+    setTimeout(()=>{ if(state.engineOn){ btnMoteur.classList.remove('spooling'); btnMoteur.classList.add('on'); Audio_.click(1100,0.08); } }, 1400);
+  } else {
+    state.engineOn=false; btnMoteur.classList.remove('on','spooling'); Audio_.click(350,0.1);
+  }
+});
+
+/* ===================== ARMEMENT ===================== */
+const btnArm=document.getElementById('btn-arm');
+btnArm.addEventListener('click', ()=>{
+  state.masterArm=!state.masterArm;
+  btnArm.classList.toggle('armed', state.masterArm);
+  Audio_.click(state.masterArm?1100:400,0.08);
+  updateFireAvailability();
+});
+
+const wselGun=document.getElementById('wsel-gun'), wselMsl=document.getElementById('wsel-msl');
+function selectWeapon(w){
+  state.weapon=w;
+  wselGun.classList.toggle('sel', w==='GUN'); wselMsl.classList.toggle('sel', w==='MSL');
+  Audio_.click(750,0.03); updateFireAvailability();
+}
+wselGun.addEventListener('click', ()=>selectWeapon('GUN'));
+wselMsl.addEventListener('click', ()=>selectWeapon('MSL'));
+
+const fireBtn=document.getElementById('fire-btn');
+function updateFireAvailability(){
+  const ok = state.masterArm && state.mode!=='PARC' && !state.crashed;
+  fireBtn.classList.toggle('disabled', !ok);
+}
+let gunInterval=null;
+fireBtn.addEventListener('pointerdown', e=>{
+  e.preventDefault();
+  if(!state.masterArm || state.mode==='PARC' || state.crashed) return;
+  if(state.weapon==='GUN'){
+    fireBtn.classList.add('firing'); fireGunBurst(); gunInterval=setInterval(fireGunBurst,110);
+  } else { fireMissile(); }
+});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>{
+  fireBtn.addEventListener(ev, ()=>{ fireBtn.classList.remove('firing'); if(gunInterval){clearInterval(gunInterval); gunInterval=null;} });
+});
+let tracerFlashTimer=0;
+function fireGunBurst(){
+  if(state.ammo<=0 || !state.masterArm) return;
+  state.ammo=Math.max(0,state.ammo-3);
+  Audio_.gunshot(); document.getElementById('ammo-val').textContent=state.ammo;
+  tracerFlashTimer=4; checkGunHit();
+}
+function fireMissile(){
+  if(state.missiles<=0 || !state.masterArm) return;
+  if(!state.lockTarget || state.lockProgress<1){ flashMessage('PAS DE VERROUILLAGE'); return; }
+  state.missiles--; document.getElementById('msl-val').textContent=state.missiles;
+  Audio_.missileLaunch();
+  state.missileShots.push({target:state.lockTarget, t:0, duration:0.9});
+}
+
+/* ===================== ENNEMIS (arcade) ===================== */
+function spawnEnemy(){
+  state.enemies.push({
+    id:Math.random(), x:(Math.random()-0.5)*1.6, y:(Math.random()-0.5)*1.6,
+    dist:1, speed:0.028+Math.random()*0.022, alive:true,
+  });
+}
+function enemyPos(e){ return {x: e.x*e.dist, y: e.y*e.dist}; }
+function destroyEnemy(e){
+  const idx=state.enemies.indexOf(e); if(idx>=0) state.enemies.splice(idx,1);
+  Audio_.explosion(); state.score++; document.getElementById('score-val').textContent=state.score;
+  flashMessage('CIBLE DÉTRUITE');
+  if(state.lockTarget===e){ state.lockTarget=null; state.lockProgress=0; }
+}
+function checkGunHit(){
+  for(const e of state.enemies){
+    const p=enemyPos(e);
+    if(Math.hypot(p.x,p.y) < 0.3 && e.dist<0.9){ destroyEnemy(e); break; }
+  }
+}
+function applyDamage(){
+  const parts=['nose','left','right','engine','tail'];
+  const p = parts[Math.floor(Math.random()*parts.length)];
+  state.damage[p] = Math.min(100, state.damage[p] + 15 + Math.random()*15);
+  Audio_.hitTone(); flashMessage('TOUCHÉ !');
+}
+function anyDamage(){ return state.damage.nose>0||state.damage.left>0||state.damage.right>0||state.damage.engine>0||state.damage.tail>0; }
+
+/* ===================== MISSIONS ROBOTS ===================== */
+const btnFuel=document.getElementById('btn-fuel'), btnRepair=document.getElementById('btn-repair'), btnAmmo=document.getElementById('btn-ammo');
+const missionBar=document.getElementById('mission-bar'), missionLabel=document.getElementById('mission-label'), missionPct=document.getElementById('mission-pct');
+function startMission(type){
+  if(state.mission) return;
+  if(type==='fuel' && state.fuel>=100) return;
+  if(type==='repair' && !anyDamage()) return;
+  if(type==='ammo' && state.ammo>=300 && state.missiles>=4) return;
+  state.mission={type, t:0, duration:5};
+  Audio_.droneWhirr();
+  updateRobotButtons();
+}
+btnFuel.addEventListener('click', ()=>startMission('fuel'));
+btnRepair.addEventListener('click', ()=>startMission('repair'));
+btnAmmo.addEventListener('click', ()=>startMission('ammo'));
+function updateRobotButtons(){
+  const busy = !!state.mission;
+  btnFuel.classList.toggle('disabled', busy || state.fuel>=100);
+  btnRepair.classList.toggle('disabled', busy || !anyDamage());
+  btnAmmo.classList.toggle('disabled', busy || (state.ammo>=300 && state.missiles>=4));
+}
+const missionNames={fuel:'RAVITAILLEMENT', repair:'RÉPARATION', ammo:'MUNITIONS'};
+
+/* ===================== BRIEFING MISSION ===================== */
+const briefings=[
+  "Secteur nord : plusieurs contacts non identifiés signalés. Restez vigilant et gardez le viseur sur l'horizon.",
+  "Ravitaillement prioritaire avant toute interception. N'oubliez pas vos robots de soutien.",
+  "Bon pilote, la météo est calme aujourd'hui. Profitez-en pour vérifier tous vos systèmes.",
+  "Nouvelle cible repérée par le radar. Verrouillez et engagez si nécessaire.",
+  "Rappel : le train doit être rentré avant de prendre de la vitesse en vol.",
+  "Belle mission hier. Le mécanicien a fini les réparations, l'appareil est prêt.",
+];
+let briefingIdx=0;
+function showBriefing(i){ document.getElementById('briefing-text').textContent = briefings[((i%briefings.length)+briefings.length)%briefings.length]; }
+showBriefing(0);
+document.getElementById('briefing-card').addEventListener('click', ()=>{ briefingIdx++; showBriefing(briefingIdx); Audio_.click(650,0.04); });
+
+/* ===================== MESSAGE ===================== */
+let msgTimer=null;
+function flashMessage(txt){
+  const el=document.getElementById('msg-center'); el.textContent=txt; el.classList.add('show');
+  clearTimeout(msgTimer); msgTimer=setTimeout(()=>el.classList.remove('show'), 1400);
+}
+
+/* ===================== BOUCLE ===================== */
+let last=performance.now();
+setInterval(()=>{ if(state.mode!=='PARC' && state.enemies.length<3 && Math.random()<0.6) spawnEnemy(); }, 3500);
+
+function loop(now){
+  const dt=Math.min(0.06,(now-last)/1000); last=now;
+  update(dt); render(); requestAnimationFrame(loop);
+}
+
+function update(dt){
+  const spoolTarget = state.engineOn? Math.max(0.22,state.throttle) : 0;
+  state.engineSpool += (spoolTarget-state.engineSpool)*Math.min(1,dt*0.6);
+
+  if(!state.engineOn) state.mode='PARC';
+  else if(state.altitude<=0.5 && state.speed<70) state.mode='ROULAGE';
+  else if(state.altitude<=0.5) state.mode='DECOLLAGE';
+  else state.mode='VOL';
+
+  if(state.engineSpool>0.02 && !state.crashed){
+    const thrust=state.engineSpool*state.engineSpool*260;
+    let drag=4+state.speed*0.028; if(state.gearDown) drag+=10; if(state.flapsDown) drag+=6;
+    state.speed += (thrust-drag)*dt*1.4; state.speed=Math.max(0,state.speed);
+    state.fuel -= dt*(state.throttle>0.9? 0.9 : 0.18*Math.max(0.15,state.engineSpool));
+    state.fuel = Math.max(0,state.fuel);
+    if(state.fuel<=0){ state.engineOn=false; btnMoteur.classList.remove('on','spooling'); }
+  } else if(!state.crashed){
+    state.speed -= (5+state.speed*0.03)*dt; state.speed=Math.max(0,state.speed);
+  }
+
+  const canFly = state.speed>55 || state.altitude>0.5;
+  if(canFly && !state.crashed){
+    state.pitch += ((joyDY)*22 - state.pitch*0.6)*dt*2.2;
+    state.bank += (joyDX*45 - state.bank*0.7)*dt*2.6;
+  } else if(!state.crashed){ state.pitch*=(1-dt*2); state.bank*=(1-dt*2); }
+  state.pitch=Math.max(-35,Math.min(35,state.pitch));
+  state.bank=Math.max(-65,Math.min(65,state.bank));
+
+  const stallSpeed = state.flapsDown?70:95;
+  state.stall = state.altitude>1 && state.speed<stallSpeed && state.pitch>2;
+  if(state.stall) state.pitch -= dt*20;
+
+  let targetVS=0;
+  if(state.speed>=(state.flapsDown?60:85) || state.altitude>0.5) targetVS=(state.pitch/35)*2800*(state.speed/420);
+  if(state.stall) targetVS=Math.min(targetVS,-1200);
+  state.vspeed += (targetVS-state.vspeed)*Math.min(1,dt*1.6);
+  if(!state.crashed) state.altitude += state.vspeed*dt/60;
+  if(state.altitude<0){
+    state.altitude=0; state.vspeed=0;
+    if(state.speed>0 && Math.abs(targetVS)>900 && !state.gearDown){
+      state.crashed=true; state.engineOn=false; btnMoteur.classList.remove('on','spooling');
+      Audio_.explosion(); flashMessage('CRASH');
+    }
+  }
+  state.heading += (state.bank/65)*38*dt; state.heading=((state.heading%360)+360)%360;
+
+  Audio_.updateEngine(state.engineSpool, state.throttle, state.speed);
+
+  for(const e of state.enemies){
+    e.dist -= e.speed*dt;
+    if(e.dist<=0.06){ applyDamage(); e.dist=1; e.x=(Math.random()-0.5)*1.6; e.y=(Math.random()-0.5)*1.6; }
+  }
+  let best=null, bestScore=1e9;
+  for(const e of state.enemies){
+    const p=enemyPos(e);
+    const sc=Math.hypot(p.x,p.y);
+    if(sc<0.6 && sc<bestScore){bestScore=sc; best=e;}
+  }
+  if(best){
+    if(state.lockTarget!==best) state.lockProgress=0;
+    state.lockTarget=best; state.lockProgress=Math.min(1,state.lockProgress+dt*0.6);
+    if(state.lockProgress<1 && Math.random()<dt*3) Audio_.lockBeep(false);
+    if(state.lockProgress>=1 && !best._locked){ best._locked=true; Audio_.lockBeep(true); }
+  } else { state.lockTarget=null; state.lockProgress=0; }
+
+  for(let i=state.missileShots.length-1;i>=0;i--){
+    const m=state.missileShots[i]; m.t+=dt;
+    if(m.t>=m.duration){
+      if(state.enemies.includes(m.target)) destroyEnemy(m.target);
+      state.missileShots.splice(i,1);
+    }
+  }
+
+  if(tracerFlashTimer>0) tracerFlashTimer--;
+
+  if(state.mission){
+    state.mission.t+=dt;
+    const pct = Math.min(100, Math.round(state.mission.t/state.mission.duration*100));
+    missionLabel.textContent = missionNames[state.mission.type]+' EN COURS…';
+    missionBar.style.width = pct+'%';
+    missionPct.textContent = pct+'%';
+    if(state.mission.t>=state.mission.duration){
+      if(state.mission.type==='fuel') state.fuel=100;
+      if(state.mission.type==='repair') state.damage={nose:0,left:0,right:0,engine:0,tail:0};
+      if(state.mission.type==='ammo'){ state.ammo=300; state.missiles=4; document.getElementById('ammo-val').textContent=300; document.getElementById('msl-val').textContent=4; }
+      flashMessage(missionNames[state.mission.type]+' TERMINÉ');
+      state.mission=null; missionBar.style.width='0%'; missionLabel.textContent=''; missionPct.textContent='—';
+    }
+  }
+  updateRobotButtons();
+  updateFireAvailability();
+
+  document.getElementById('hud-mode').textContent=state.mode;
+  document.getElementById('hud-clock').textContent=fmtClock();
+  document.getElementById('alert-arme').className='led'+(state.masterArm?' on':'');
+  document.getElementById('alert-carbu').className='led'+(state.fuel<15?' on amber':'');
+  document.getElementById('alert-etat').className='led'+(anyDamage()?' on amber':'');
+  if((state.stall||state.fuel<15||state.crashed) && Math.random()<0.02) Audio_.warnTone();
+  document.getElementById('alt-readout').textContent=Math.round(state.altitude);
+  document.getElementById('spd-readout').textContent=Math.round(state.speed);
+}
+
+/* ===================== RENDU ===================== */
+function render(){
+  drawTape(altCtx, altCv, state.altitude, 100);
+  drawTape(spdCtx, spdCv, state.speed, 20);
+  drawViseur();
+  drawHeadingStrip();
+  drawAttitude();
+  drawFuel();
+  drawDamage();
+  drawRadar();
+  drawVisualMission();
+}
+
+function drawTape(ctx, cv, value, step){
+  const w=cv.clientWidth, h=cv.clientHeight; ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle='rgba(61,255,176,0.55)'; ctx.fillStyle='rgba(61,255,176,0.75)'; ctx.font='9px Consolas, monospace';
+  const pxPerUnit=h/(step*4); const center=h/2; const startVal=Math.floor((value-step*8)/step)*step;
+  for(let v=startVal; v<value+step*8; v+=step){
+    const y=center-(v-value)*pxPerUnit; if(y<-10||y>h+10) continue;
+    const major=(v/(step*2))%1===0; ctx.lineWidth=major?1.5:1;
+    ctx.beginPath(); ctx.moveTo(major? w-20:w-12, y); ctx.lineTo(w-3,y); ctx.stroke();
+    if(major) ctx.fillText(String(Math.round(v)), 3, y+3);
+  }
+}
+
+function drawViseur(){
+  const w=viseurCv.clientWidth, h=viseurCv.clientHeight; const ctx=viseurCtx;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#03120b'; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='rgba(61,255,176,0.18)'; ctx.lineWidth=1;
+  for(let i=1;i<4;i++){ const p=i/4; ctx.beginPath(); ctx.moveTo(w*p,0); ctx.lineTo(w*p,h); ctx.moveTo(0,h*p); ctx.lineTo(w,h*p); ctx.stroke(); }
+  const cx=w/2, cy=h/2, R=Math.min(w,h)/2-6;
+
+  ctx.strokeStyle=state.weapon==='GUN'?'rgba(61,255,176,0.9)':'rgba(255,178,56,0.9)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,R*0.22,0,Math.PI*2);
+  ctx.moveTo(cx-R*0.34,cy); ctx.lineTo(cx-R*0.24,cy); ctx.moveTo(cx+R*0.24,cy); ctx.lineTo(cx+R*0.34,cy);
+  ctx.moveTo(cx,cy-R*0.34); ctx.lineTo(cx,cy-R*0.24); ctx.moveTo(cx,cy+R*0.24); ctx.lineTo(cx,cy+R*0.34);
+  ctx.stroke();
+
+  if(state.lockTarget){
+    const lp=enemyPos(state.lockTarget);
+    const ex=cx+lp.x*R, ey=cy+lp.y*R;
+    ctx.strokeStyle = state.lockProgress>=1? '#ff5c50':'#ffb238';
+    ctx.beginPath(); ctx.arc(ex,ey, 10, -Math.PI/2, -Math.PI/2 + state.lockProgress*Math.PI*2); ctx.stroke();
+  }
+
+  for(const e of state.enemies){
+    const p=enemyPos(e);
+    const ex=cx+p.x*R, ey=cy+p.y*R;
+    const size=4+(1-e.dist)*14;
+    const locked = state.lockTarget===e;
+    ctx.strokeStyle = locked? (state.lockProgress>=1?'#ff5c50':'#ffb238') : 'rgba(61,255,176,0.85)';
+    ctx.lineWidth=locked?2:1.2;
+    ctx.strokeRect(ex-size/2, ey-size/2, size, size);
+  }
+
+  if(tracerFlashTimer>0){
+    ctx.strokeStyle='rgba(255,255,220,0.85)'; ctx.lineWidth=2;
+    for(let i=0;i<2;i++){
+      const ox=(Math.random()-0.5)*6;
+      ctx.beginPath(); ctx.moveTo(cx+ox, h+6); ctx.lineTo(cx+ox*0.3, cy); ctx.stroke();
+    }
+  }
+
+  for(const m of state.missileShots){
+    const p=Math.min(1,m.t/m.duration);
+    const targetLive = state.enemies.includes(m.target);
+    const tp = targetLive? enemyPos(m.target) : {x:0,y:-1};
+    const tx = cx + tp.x*R;
+    const ty = cy + tp.y*R;
+    const mx = cx + (tx-cx)*p, my = h + (ty-h)*p;
+    ctx.strokeStyle='rgba(255,178,56,0.9)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(mx, my+16); ctx.lineTo(mx,my); ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(mx,my,2.4,0,Math.PI*2); ctx.fill();
+  }
+
+  if(state.stall){ ctx.fillStyle='#ff5c50'; ctx.font='bold 12px Consolas, monospace'; ctx.textAlign='center'; ctx.fillText('DÉCROCHAGE', cx, h*0.14); ctx.textAlign='left'; }
+  if(state.crashed){ ctx.fillStyle='#ff5c50'; ctx.font='bold 13px Consolas, monospace'; ctx.textAlign='center'; ctx.fillText('IMPACT', cx, h*0.14); ctx.textAlign='left'; }
+}
+
+function drawHeadingStrip(){
+  const w=headingCv.clientWidth, h=headingCv.clientHeight; const ctx=headingCtx;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle='rgba(61,255,176,0.5)'; ctx.fillStyle='rgba(61,255,176,0.85)';
+  ctx.font=Math.max(8,h*0.34)+'px Consolas, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  const span=90; const pxPerDeg = w/span;
+  for(let d=-45; d<=45; d+=5){
+    const hd=((state.heading+d)%360+360)%360;
+    const x=w/2+d*pxPerDeg;
+    const major = Math.round(hd)%10===0;
+    ctx.lineWidth=major?1.5:1;
+    ctx.beginPath(); ctx.moveTo(x, major? h*0.15:h*0.32); ctx.lineTo(x, major? h*0.55:h*0.45); ctx.stroke();
+    if(major){
+      let lbl=String(Math.round(hd/10)).padStart(2,'0');
+      const rhd=Math.round(hd);
+      if(rhd===0) lbl='N'; if(rhd===90) lbl='E'; if(rhd===180) lbl='S'; if(rhd===270) lbl='O';
+      ctx.fillText(lbl, x, h*0.78);
+    }
+  }
+  ctx.strokeStyle='var(--amber)'; ctx.fillStyle='var(--amber)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(w/2, h*0.02); ctx.lineTo(w/2-4,h*0.14); ctx.lineTo(w/2+4,h*0.14); ctx.closePath(); ctx.fill();
+}
+
+function drawAttitude(){
+  const w=attCv.clientWidth, h=attCv.clientHeight; const ctx=attCtx;
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2, R=Math.min(w,h)/2-3;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip();
+  ctx.translate(cx,cy); ctx.rotate(-state.bank*Math.PI/180);
+  const horizonY = state.pitch*(R/28);
+  const g1=ctx.createLinearGradient(0,horizonY-R*2,0,horizonY); g1.addColorStop(0,'#062018'); g1.addColorStop(1,'#0c4a34');
+  ctx.fillStyle=g1; ctx.fillRect(-R*2,horizonY-R*2,R*4,R*2);
+  const g2=ctx.createLinearGradient(0,horizonY,0,horizonY+R*2); g2.addColorStop(0,'#241a0a'); g2.addColorStop(1,'#0a0704');
+  ctx.fillStyle=g2; ctx.fillRect(-R*2,horizonY,R*4,R*2);
+  ctx.strokeStyle='rgba(61,255,176,0.8)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(-R*2,horizonY); ctx.lineTo(R*2,horizonY); ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle='rgba(61,255,176,0.4)'; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle='var(--amber)'; ctx.fillStyle='var(--amber)'; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(cx-R*0.5,cy); ctx.lineTo(cx-R*0.18,cy);
+  ctx.moveTo(cx+R*0.18,cy); ctx.lineTo(cx+R*0.5,cy);
+  ctx.moveTo(cx,cy-R*0.12); ctx.lineTo(cx,cy+R*0.12);
+  ctx.stroke();
+}
+
+function drawFuel(){
+  const w=fuelCv.clientWidth, h=fuelCv.clientHeight; const ctx=fuelCtx;
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2, R=Math.min(w,h)/2-4;
+  const bezelGrad = ctx.createRadialGradient(cx-R*0.3,cy-R*0.3,R*0.1,cx,cy,R);
+  bezelGrad.addColorStop(0,'#eaeaea'); bezelGrad.addColorStop(0.55,'#8c8c8c'); bezelGrad.addColorStop(1,'#333333');
+  ctx.fillStyle=bezelGrad; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+  const faceR = R*0.86;
+  const faceGrad = ctx.createRadialGradient(cx,cy,faceR*0.2,cx,cy,faceR);
+  faceGrad.addColorStop(0,'#f3ecd9'); faceGrad.addColorStop(1,'#d7cda9');
+  ctx.fillStyle=faceGrad; ctx.beginPath(); ctx.arc(cx,cy,faceR,0,Math.PI*2); ctx.fill();
+  const startA=Math.PI*0.75, endA=Math.PI*2.25;
+  ctx.strokeStyle='#2a2418'; ctx.fillStyle='#2a2418';
+  for(let i=0;i<=10;i++){
+    const a = startA + (endA-startA)*(i/10);
+    const major = i%5===0;
+    const r1 = faceR*(major?0.7:0.8), r2=faceR*0.88;
+    ctx.lineWidth = major?2:1;
+    ctx.beginPath(); ctx.moveTo(cx+Math.cos(a)*r1, cy+Math.sin(a)*r1); ctx.lineTo(cx+Math.cos(a)*r2, cy+Math.sin(a)*r2); ctx.stroke();
+  }
+  ctx.font='bold '+(faceR*0.22)+'px Georgia, serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('E', cx+Math.cos(startA)*faceR*0.55, cy+Math.sin(startA)*faceR*0.55);
+  ctx.fillText('F', cx+Math.cos(endA)*faceR*0.55, cy+Math.sin(endA)*faceR*0.55);
+  ctx.font='bold '+(faceR*0.15)+'px Georgia, serif';
+  ctx.fillText('CARBURANT', cx, cy+faceR*0.44);
+  const pct = state.fuel/100;
+  const needleA = startA + (endA-startA)*pct;
+  ctx.strokeStyle = state.fuel<15? '#a01818':'#8a1818'; ctx.lineWidth=3; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(cx - Math.cos(needleA)*faceR*0.16, cy - Math.sin(needleA)*faceR*0.16); ctx.lineTo(cx+Math.cos(needleA)*faceR*0.66, cy+Math.sin(needleA)*faceR*0.66); ctx.stroke();
+  ctx.fillStyle='#1a1a1a'; ctx.beginPath(); ctx.arc(cx,cy,faceR*0.09,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=faceR*0.3;
+  ctx.beginPath(); ctx.arc(cx,cy,faceR*0.75, Math.PI*1.1, Math.PI*1.5); ctx.stroke();
+}
+
+function dmgColor(v){
+  if(v<25) return '#3dffb0';
+  if(v<70) return '#ffb238';
+  return '#ff3b30';
+}
+function drawDamage(){
+  const w=dmgCv.clientWidth, h=dmgCv.clientHeight; const ctx=dmgCtx;
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2;
+  ctx.strokeStyle='rgba(61,255,176,0.4)'; ctx.lineWidth=1;
+  ctx.fillStyle=dmgColor(state.damage.nose);
+  ctx.beginPath();
+  ctx.moveTo(cx, h*0.02);
+  ctx.lineTo(cx-w*0.03, h*0.14); ctx.lineTo(cx-w*0.1, h*0.3); ctx.lineTo(cx+w*0.1, h*0.3); ctx.lineTo(cx+w*0.03, h*0.14);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='rgba(61,255,176,0.12)';
+  ctx.beginPath(); ctx.moveTo(cx-w*0.1,h*0.3); ctx.lineTo(cx+w*0.1,h*0.3); ctx.lineTo(cx+w*0.08,h*0.62); ctx.lineTo(cx-w*0.08,h*0.62); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=dmgColor(state.damage.left);
+  ctx.beginPath(); ctx.moveTo(cx-w*0.09,h*0.36); ctx.lineTo(cx-w*0.46,h*0.58); ctx.lineTo(cx-w*0.44,h*0.66); ctx.lineTo(cx-w*0.08,h*0.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=dmgColor(state.damage.right);
+  ctx.beginPath(); ctx.moveTo(cx+w*0.09,h*0.36); ctx.lineTo(cx+w*0.46,h*0.58); ctx.lineTo(cx+w*0.44,h*0.66); ctx.lineTo(cx+w*0.08,h*0.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=dmgColor(state.damage.tail);
+  ctx.beginPath(); ctx.moveTo(cx-w*0.08,h*0.6); ctx.lineTo(cx-w*0.24,h*0.56); ctx.lineTo(cx-w*0.18,h*0.86); ctx.lineTo(cx-w*0.06,h*0.78); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+w*0.08,h*0.6); ctx.lineTo(cx+w*0.24,h*0.56); ctx.lineTo(cx+w*0.18,h*0.86); ctx.lineTo(cx+w*0.06,h*0.78); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=dmgColor(state.damage.engine);
+  ctx.beginPath(); ctx.moveTo(cx-w*0.06,h*0.62); ctx.lineTo(cx+w*0.06,h*0.62); ctx.lineTo(cx+w*0.05,h*0.9); ctx.lineTo(cx-w*0.05,h*0.9); ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+
+function drawTri(ctx,x,y,s,up){
+  ctx.beginPath();
+  if(up){ ctx.moveTo(x,y-s); ctx.lineTo(x-s,y+s*0.7); ctx.lineTo(x+s,y+s*0.7); }
+  else { ctx.moveTo(x,y+s); ctx.lineTo(x-s,y-s*0.7); ctx.lineTo(x+s,y-s*0.7); }
+  ctx.closePath(); ctx.fill();
+}
+function drawRadar(){
+  const w=radarCv.clientWidth, h=radarCv.clientHeight; const ctx=radarCtx;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#020705'; ctx.fillRect(0,0,w,h);
+  const cx=w/2, cy=h/2, R=Math.min(w,h)/2-16;
+  ctx.strokeStyle='rgba(61,255,176,0.32)'; ctx.lineWidth=1;
+  for(let i=1;i<=3;i++){ ctx.beginPath(); ctx.arc(cx,cy,R*i/3,0,Math.PI*2); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(cx-R,cy); ctx.lineTo(cx+R,cy); ctx.moveTo(cx,cy-R); ctx.lineTo(cx,cy+R); ctx.stroke();
+
+  const t = performance.now()/1000;
+
+  /* balayage circulaire */
+  const sweepAngle = (t*1.3) % (Math.PI*2);
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip();
+  const trailLen=1.1;
+  const grad=ctx.createConicGradient ? ctx.createConicGradient(sweepAngle-trailLen, cx, cy) : null;
+  if(grad){
+    grad.addColorStop(0, 'rgba(61,255,176,0)');
+    grad.addColorStop(0.92, 'rgba(61,255,176,0.05)');
+    grad.addColorStop(1, 'rgba(61,255,176,0.4)');
+    ctx.fillStyle=grad;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,sweepAngle-trailLen,sweepAngle); ctx.closePath(); ctx.fill();
+  } else {
+    for(let i=0;i<24;i++){
+      const a=sweepAngle-i*(trailLen/24);
+      ctx.strokeStyle=`rgba(61,255,176,${0.28*(1-i/24)})`; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*R, cy+Math.sin(a)*R); ctx.stroke();
+    }
+  }
+  ctx.strokeStyle='rgba(61,255,176,0.95)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(sweepAngle)*R, cy+Math.sin(sweepAngle)*R); ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle='rgba(61,255,176,0.55)'; ctx.font='7.5px Consolas, monospace'; ctx.textAlign='left';
+  ctx.fillText('ALT  FT', 4, 10); ctx.fillText('SPD  KTS', 4, 19);
+  ctx.textAlign='center'; ctx.fillText('DEG', cx, 10);
+  ctx.textAlign='right'; ctx.fillText('S-'+String(state.score).padStart(3,'0'), w-4, h-5);
+
+  ctx.fillStyle='rgba(61,255,176,0.85)';
+  const wing=[[-0.55,-0.3,0.3],[0.5,0.1,2.1]];
+  for(const wpt of wing){
+    const wx = cx + (wpt[0] + Math.sin(t*0.3+wpt[2])*0.04)*R;
+    const wy = cy + (wpt[1] + Math.cos(t*0.22+wpt[2])*0.04)*R;
+    drawTri(ctx, wx, wy, 6, true);
+  }
+
+  ctx.strokeStyle='rgba(61,255,176,0.9)'; ctx.lineWidth=1.5;
+  if(state.lockTarget){
+    const lp=enemyPos(state.lockTarget);
+    const tx=cx+lp.x*R, ty=cy+lp.y*R;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(tx,ty); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx,cy-R*0.3); ctx.stroke();
+  }
+  ctx.fillStyle='rgba(61,255,176,0.95)';
+  ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2); ctx.fill();
+
+  for(const e of state.enemies){
+    const p=enemyPos(e);
+    const ex=cx+p.x*R, ey=cy+p.y*R;
+    ctx.fillStyle = state.lockTarget===e? '#ff5c50':'#ff3b30';
+    drawTri(ctx, ex, ey, 6, e.dist<0.5);
+  }
+}
+
+/* ===================== VISUEL MISSION ROBOT ===================== */
+function drawRobotIcon(ctx,x,y,s,color){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(s/24,s/24);
+  ctx.fillStyle=color; ctx.strokeStyle=color; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(6,9,12,10,2) : ctx.rect(6,9,12,10); ctx.fill();
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(9,3,6,6,1.5) : ctx.rect(9,3,6,6); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(12,3); ctx.lineTo(12,1); ctx.stroke();
+  ctx.beginPath(); ctx.arc(12,1,1,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#04150d';
+  ctx.beginPath(); ctx.arc(9.5,6,1,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(14.5,6,1,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=color;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(3,11,3,6,1.5) : ctx.rect(3,11,3,6); ctx.fill();
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(18,11,3,6,1.5) : ctx.rect(18,11,3,6); ctx.fill();
+  ctx.restore();
+}
+function drawVisualMission(){
+  const w=visMisCv.clientWidth, h=visMisCv.clientHeight; const ctx=visMisCtx;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#03120b'; ctx.fillRect(0,0,w,h);
+  const groundY=h*0.72;
+  ctx.strokeStyle='rgba(61,255,176,0.3)'; ctx.beginPath(); ctx.moveTo(0,groundY); ctx.lineTo(w,groundY); ctx.stroke();
+  ctx.fillStyle='rgba(61,255,176,0.08)'; ctx.fillRect(0,groundY,w,h-groundY);
+
+  const cx=w/2, cy=groundY-h*0.14;
+  ctx.strokeStyle='rgba(61,255,176,0.75)'; ctx.lineWidth=1.6;
+  ctx.beginPath();
+  ctx.moveTo(cx-w*0.16,cy); ctx.lineTo(cx+w*0.16,cy);
+  ctx.moveTo(cx-w*0.05,cy-h*0.09); ctx.lineTo(cx+w*0.05,cy-h*0.09);
+  ctx.lineTo(cx+w*0.02,cy); ctx.moveTo(cx-w*0.05,cy-h*0.09); ctx.lineTo(cx-w*0.02,cy);
+  ctx.stroke();
+
+  let caption='Aucune mission en cours';
+  if(state.mission){
+    const t=performance.now()/1000;
+    const bob = Math.sin(t*4)*3;
+    const dx = cx + w*0.22, dy = cy - h*0.05 + bob;
+    drawRobotIcon(ctx, w*0.12, groundY-16, 20, 'rgba(61,255,176,0.85)');
+    ctx.fillStyle='var(--amber)';
+    ctx.beginPath(); ctx.moveTo(dx,dy-6); ctx.lineTo(dx+6,dy+5); ctx.lineTo(dx-6,dy+5); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(255,178,56,0.6)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(dx,dy+6); ctx.lineTo(cx+w*0.05,cy-h*0.04); ctx.stroke();
+    if(state.mission.type==='fuel'){
+      ctx.fillStyle='rgba(255,178,56,0.9)'; ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText('⛽', dx, dy+4);
+      caption='Ravitaillement en cours…';
+    } else if(state.mission.type==='repair'){
+      ctx.fillStyle='rgba(255,178,56,0.9)'; ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText('🔧', dx, dy+4);
+      caption='Réparation en cours…';
+    } else {
+      ctx.fillStyle='rgba(255,178,56,0.9)'; ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText('📦', dx, dy+4);
+      caption='Livraison de munitions…';
+    }
+  }
+  document.getElementById('visual-mission-caption').textContent=caption;
+}
+
+/* ===================== CLAVIER (test bureau) ===================== */
+window.addEventListener('keydown', e=>{
+  if(e.code==='Space'){ e.preventDefault(); if(!fireBtn.classList.contains('disabled')) fireBtn.dispatchEvent(new PointerEvent('pointerdown')); }
+  if(e.key==='ArrowUp') joyDY=-1; if(e.key==='ArrowDown') joyDY=1;
+  if(e.key==='ArrowLeft') joyDX=-1; if(e.key==='ArrowRight') joyDX=1;
+});
+window.addEventListener('keyup', e=>{
+  if(e.code==='Space') fireBtn.dispatchEvent(new PointerEvent('pointerup'));
+  if(['ArrowUp','ArrowDown'].includes(e.key)) joyDY=0;
+  if(['ArrowLeft','ArrowRight'].includes(e.key)) joyDX=0;
+});
+
+updateRobotButtons();
+})();
+</script>
+</body>
+</html>
