@@ -66,35 +66,6 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 }
 
 
-/* MOYEN écran (tablette / fenêtre réduite) : mêmes zones nommées, pistes plus compactes */
-@media (max-width:1300px) and (min-width:881px){
-  #row1{grid-template-columns: 108px 108px 108px 108px 1fr; flex:0 0 108px;}
-  #main-row{grid-template-columns: 104px 1fr 168px; grid-template-rows: 1fr 140px;}
-  #row3-sub{flex-wrap:wrap;}
-  #visual-mission-block{flex:0 0 140px;}
-}
-
-/* PETIT écran (mobile / portrait) : une seule colonne empilée, défilement autorisé */
-@media (max-width:880px), (orientation:portrait){
-  html,body{overflow-y:auto;}
-  #viewport{overflow-y:auto; overflow-x:hidden; touch-action:pan-y;}
-  #cockpit{position:relative; height:auto; min-height:100%;}
-  #row1{grid-template-columns: repeat(2, 1fr); grid-auto-rows:140px; flex:none; height:auto;}
-  #briefing-card{grid-column: span 2; min-height:140px;}
-  #main-row{
-    grid-template-columns: 1fr; grid-template-rows: none; grid-auto-rows:auto; height:auto;
-    grid-template-areas: "manette" "commandes" "instr" "row3" "colright";
-  }
-  #col-right{flex-direction:column;}
-  #robots-block{flex:0 0 auto;}
-  #visual-mission-block{flex:0 0 108px;}
-  #instruments-block{height:320px;}
-  #manette-block{min-height:260px;}
-  #commandes-block{min-height:170px;}
-  #robots-block{min-height:190px;}
-  #row3-sub{flex-wrap:wrap; height:auto;}
-  #row3-sub > .card{flex:1 1 220px; min-height:190px;}
-}
 
 #topbar{
   display:none;
@@ -219,7 +190,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
   border:2px solid var(--rivet); touch-action:none;
 }
 #joy-stick{
-  position:absolute; width:40px; height:40px; border-radius:50%; left:28px; top:28px;
+  position:absolute; width:42%; height:42%; border-radius:50%; left:29%; top:29%;
   background:radial-gradient(circle at 35% 30%,#5a6a52,#232c1f); border:2px solid #0a0d09;
   box-shadow:0 3px 6px rgba(0,0,0,0.6);
 }
@@ -250,6 +221,108 @@ html,body{margin:0; padding:0; width:100%; height:100%; background:#000; color:v
 #visual-mission-canvas-wrap{flex:1 1 0; position:relative; min-height:0;}
 #visual-mission-canvas-wrap canvas{display:block; position:absolute; inset:0; width:100%; height:100%;}
 #visual-mission-caption{font-size:8px; color:var(--hud-dim); text-align:center; padding:3px 4px 5px; flex:0 0 auto;}
+/* ===================== PALIERS RESPONSIVES =====================
+   Placés en fin de feuille : ils doivent l'emporter sur les tailles fixes
+   déclarées plus haut pour chaque composant. */
+/* ÉCRAN COMPACT (fenêtre du navigateur Tesla, tablette, petite fenêtre de bureau) :
+   mêmes zones nommées que sur grand écran, mais toutes les pistes sont exprimées
+   en unités relatives à la hauteur du viewport -> le cockpit entier tient dans
+   l'écran, sans le moindre défilement. */
+@media (max-width:1300px), (max-height:820px){
+  #row1{
+    grid-template-columns: repeat(4, minmax(0,1fr)) 1.7fr;
+    gap:6px; padding:6px 6px 0 6px;
+    flex:0 0 clamp(84px, 16vh, 150px);
+  }
+  #main-row{
+    gap:6px; padding:6px;
+    grid-template-columns: minmax(58px,0.9fr) 4.2fr minmax(104px,1.5fr);
+    grid-template-rows: 1fr clamp(96px, 19vh, 150px);
+  }
+
+  /* la sous-rangée ne passe plus à la ligne : les trois cartes se partagent la largeur */
+  #row3-sub{flex-wrap:nowrap; gap:6px;}
+  #manche-block{flex:1 1 0; min-width:0;}
+  #armement-block{flex:1.15 1 0; min-width:0;}
+  #radar-card{flex:1 1 0; min-width:0;}
+  #col-right{gap:6px;}
+  #visual-mission-block{flex:0 0 clamp(60px, 12vh, 140px);}
+
+  /* instruments : bandes altitude / vitesse et boussole réduites */
+  #instruments-block{
+    grid-template-columns: clamp(32px,5.5vw,66px) 1fr clamp(32px,5.5vw,66px);
+    grid-template-rows: 1fr clamp(22px,3.6vh,38px);
+  }
+  #boussole-wrap{flex:0 0 clamp(22px,3.6vh,38px);}
+
+  /* organes de pilotage mis à l'échelle de la hauteur disponible */
+  #joy-zone{width:clamp(46px,8.5vh,96px); height:clamp(46px,8.5vh,96px);}
+  .round-toggle{width:clamp(24px,4vh,38px); height:clamp(24px,4vh,38px);}
+  .robot-btn{width:clamp(26px,4.6vh,44px); height:clamp(26px,4.6vh,44px); border-radius:6px;}
+  .robot-btn svg{width:clamp(13px,2.4vh,20px); height:clamp(13px,2.4vh,20px);}
+  #robot-icon svg{width:clamp(18px,3.2vh,34px); height:clamp(18px,3.2vh,34px);}
+
+  /* quelques pixels récupérés sur les titres, marges et interlignes */
+  .card h3, .card .rc-title{font-size:8px; padding:2px 2px; letter-spacing:1px;}
+  #alerte-body{gap:4px; padding:2px 6px;}
+  .alert-row{font-size:9px;}
+  #commandes-body{padding:2px 6px;}
+  #armement-body{gap:4px; padding:4px 6px 6px;}
+  #robots-body{padding:4px 6px 6px; gap:4px;}
+  #robot-icon{padding:0;}
+  #briefing-body{padding:4px 8px;}
+  #briefing-text{font-size:10px; line-height:1.4;}
+  #briefing-sign{font-size:10px;}
+  #mission-label{min-height:0; line-height:1.2;}
+  #mission-pct-wrap .val{font-size:13px;}
+  #throttle-val{padding-bottom:2px;}
+  #fire-btn{padding:4px; font-size:10px;}
+}
+
+/* ÉCRAN COMPACT ET PEU HAUT : on serre encore les deux rangées fixes */
+@media (max-height:640px){
+  #row1{flex:0 0 clamp(70px, 15vh, 110px);}
+  #main-row{grid-template-rows: 1fr clamp(82px, 17vh, 120px);}
+  #robot-icon{display:none;}
+  .robot-lbl{font-size:6.5px;}
+  #visual-mission-caption{display:none;}
+  .card h3, .card .rc-title{font-size:7.5px; padding:1px 2px;}
+  #armement-body{gap:3px; padding:3px 5px 4px;}
+  #weapon-toggle div{padding:3px 2px; font-size:8px;}
+  #ammo-readout{font-size:8px;}
+  #fire-btn{padding:2px; font-size:9px; letter-spacing:1px;}
+  #commandes-body{padding:1px 5px;}
+  #robots-body{padding:3px 5px 4px; gap:3px;}
+}
+
+/* TÉLÉPHONE (largeur réellement étroite) : une seule colonne empilée, défilement autorisé */
+@media (max-width:620px){
+  html,body{overflow-y:auto;}
+  #viewport{overflow-y:auto; overflow-x:hidden; touch-action:pan-y;}
+  #cockpit{position:relative; height:auto; min-height:100%;}
+  #row1{grid-template-columns: repeat(2, 1fr); grid-auto-rows:140px; flex:none; height:auto;}
+  #briefing-card{grid-column: span 2; min-height:140px;}
+  #main-row{
+    grid-template-columns: 1fr; grid-template-rows: none; grid-auto-rows:auto; height:auto;
+    grid-template-areas: "manette" "commandes" "instr" "row3" "colright";
+  }
+  #col-right{flex-direction:column;}
+  #robots-block{flex:0 0 auto;}
+  #robot-icon{display:flex;}
+  #visual-mission-block{flex:0 0 108px;}
+  #visual-mission-caption{display:block;}
+  #instruments-block{height:320px; grid-template-columns: 66px 1fr 66px; grid-template-rows: 1fr 38px;}
+  #boussole-wrap{flex:0 0 38px;}
+  #manette-block{min-height:260px;}
+  #commandes-block{min-height:170px;}
+  #robots-block{min-height:190px;}
+  #row3-sub{flex-wrap:wrap; height:auto;}
+  #row3-sub > .card{flex:1 1 220px; min-height:190px;}
+  #joy-zone{width:96px; height:96px;}
+  .round-toggle{width:38px; height:38px;}
+  .robot-btn{width:44px; height:44px;}
+  .robot-btn svg{width:20px; height:20px;}
+}
 </style>
 </head>
 <body>
@@ -619,13 +692,14 @@ const joyZone=document.getElementById('joy-zone');
 const joyStick=document.getElementById('joy-stick');
 function joyMove(clientX,clientY){
   const r=joyZone.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2;
-  let dx=clientX-cx, dy=clientY-cy; const max=r.width/2-20;
+  let dx=clientX-cx, dy=clientY-cy; const max=r.width*0.29;
   const dist=Math.hypot(dx,dy);
   if(dist>max){dx=dx/dist*max; dy=dy/dist*max;}
-  joyStick.style.left=(28+ (dx/max)*28)+'px'; joyStick.style.top=(28+ (dy/max)*28)+'px';
+  /* position en % : le manche suit la taille de sa zone, qui varie selon l'écran */
+  joyStick.style.left=(29+ (dx/max)*29)+'%'; joyStick.style.top=(29+ (dy/max)*29)+'%';
   joyDX=dx/max; joyDY=dy/max;
 }
-function joyReset(){ joyStick.style.left='28px'; joyStick.style.top='28px'; joyDX=0; joyDY=0; }
+function joyReset(){ joyStick.style.left='29%'; joyStick.style.top='29%'; joyDX=0; joyDY=0; }
 joyZone.addEventListener('pointerdown', e=>{e.preventDefault(); joyActive=true; joyMove(e.clientX,e.clientY); joyZone.setPointerCapture(e.pointerId);});
 joyZone.addEventListener('pointermove', e=>{if(joyActive){ e.preventDefault(); joyMove(e.clientX,e.clientY);} });
 joyZone.addEventListener('pointerup', e=>{joyActive=false; joyReset();});
